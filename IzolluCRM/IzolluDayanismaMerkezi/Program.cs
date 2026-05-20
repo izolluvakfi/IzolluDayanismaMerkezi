@@ -18,12 +18,9 @@ cultureInfo.NumberFormat.CurrencyDecimalSeparator = ".";
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-// Configure Kestrel - Railway $PORT degiskenini kullan, yoksa 5000
-var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "5000");
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(port);
-});
+// Railway PORT env var'ını oku; yoksa 8080 varsayılan (Railway default)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Enable static web assets (for MudBlazor and other RCL packages)
 builder.WebHost.UseStaticWebAssets();
