@@ -18,11 +18,11 @@ cultureInfo.NumberFormat.CurrencyDecimalSeparator = ".";
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-// Configure Kestrel to listen on all network interfaces
+// Configure Kestrel - Railway $PORT degiskenini kullan, yoksa 5000
+var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "5000");
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenAnyIP(5000); // HTTP
-    // Uncomment for HTTPS: serverOptions.ListenAnyIP(5001, listenOptions => { listenOptions.UseHttps(); });
+    serverOptions.ListenAnyIP(port);
 });
 
 // Enable static web assets (for MudBlazor and other RCL packages)
@@ -88,7 +88,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// HTTPS redirection Railway/Docker'da devre disi - proxy SSL'i yonetiyor
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
