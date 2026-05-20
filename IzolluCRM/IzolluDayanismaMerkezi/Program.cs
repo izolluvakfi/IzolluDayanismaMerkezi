@@ -120,8 +120,26 @@ using (var scope = app.Services.CreateScope())
             await createCmd.ExecuteNonQueryAsync();
         }
 
+        // Check actual table/column existence to decide which RBAC migrations to mark as done.
+        // The seed DB was created before RBAC existed (via EnsureCreated), so AppUsers may be
+        // missing even though the migration ID looks like it was applied.
+        bool appUsersExists;
+        using (var checkCmd = conn.CreateCommand())
+        {
+            checkCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='AppUsers'";
+            appUsersExists = (long)(await checkCmd.ExecuteScalarAsync())! > 0;
+        }
+
+        bool lockoutColumnsExist = false;
+        if (appUsersExists)
+        {
+            using var checkCmd = conn.CreateCommand();
+            checkCmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('AppUsers') WHERE name='FailedLoginCount'";
+            lockoutColumnsExist = (long)(await checkCmd.ExecuteScalarAsync())! > 0;
+        }
+
         // Ensure every pre-RBAC migration is recorded (INSERT OR IGNORE is safe to repeat)
-        var knownMigrations = new[]
+        var knownMigrationsList = new List<string>
         {
             "20251115192759_InitialCreate",
             "20251115194550_AddFirmaToMember",
@@ -141,8 +159,14 @@ using (var scope = app.Services.CreateScope())
             "20251222140844_AddStudentScholarshipStatus",
             "20251222142453_AddTermIdToMeeting",
             "20260104210357_AddIsMaxGradeReachedFlag",
-            "20260520000000_AddRbacSystem"
         };
+
+        // Only mark RBAC migrations as done if the tables/columns actually exist.
+        // If AppUsers is missing, let MigrateAsync run AddRbacSystem to create it.
+        if (appUsersExists)     knownMigrationsList.Add("20260520000000_AddRbacSystem");
+        if (lockoutColumnsExist) knownMigrationsList.Add("20260520000001_AddUserLockout");
+
+        var knownMigrations = knownMigrationsList.ToArray();
 
         foreach (var migration in knownMigrations)
         {
@@ -178,8 +202,15 @@ using (var scope = app.Services.CreateScope())
     await systemSettingsService.GetOrCreateSettingsAsync();
 
     // Seed default admin user if no users exist
-    var rbacService = scope.ServiceProvider.GetRequiredService<RbacService>();
-    await rbacService.SeedDefaultAdminAsync();
+    try
+    {
+        var rbacService = scope.ServiceProvider.GetRequiredService<RbacService>();
+        await rbacService.SeedDefaultAdminAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "SeedDefaultAdminAsync failed (AppUsers table may not be ready yet)");
+    }
 }
 
 // Open browser automatically after startup (only when running locally)
