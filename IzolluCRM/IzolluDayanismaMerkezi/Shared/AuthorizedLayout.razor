@@ -40,13 +40,18 @@ else
     protected override void OnInitialized()
     {
         AuthService.OnAuthStateChanged += OnAuthStateChanged;
+
+        // Eğer kullanıcı zaten authenticated ise (login'den yeni geldi),
+        // session check'i atla → login sonrası beyaz ekran flash'ı önlenir.
+        if (AuthService.IsAuthenticated)
+            _sessionChecked = true;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender || _sessionChecked) return;
-        _sessionChecked = true;
 
+        // Reload durumu — localStorage'dan session'ı geri yükle
         if (!AuthService.IsAuthenticated)
         {
             await TryRestoreSessionAsync();
@@ -55,10 +60,14 @@ else
             {
                 var path = Navigation.ToBaseRelativePath(Navigation.Uri);
                 if (!path.StartsWith("login"))
+                {
                     Navigation.NavigateTo("/login", true);
+                    return;
+                }
             }
         }
 
+        _sessionChecked = true;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -88,7 +97,9 @@ else
     private async Task HandleLogout()
     {
         try { await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "izollu_session"); } catch { }
-        AuthService.Logout();
+        // AuthService.Logout() ÇAĞIRMA: OnAuthStateChanged tetiklenir, sidebar kaybolur,
+        // ama forceLoad reload tamamlanana kadar 1-2sn mevcut sayfa boş görünür.
+        // forceLoad zaten tüm circuit'i sıfırlayacak, AuthService de yeni circuit'te boş başlayacak.
         Navigation.NavigateTo("/login", forceLoad: true);
     }
 

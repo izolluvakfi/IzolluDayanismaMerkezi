@@ -1007,7 +1007,12 @@ else
         {
             // Get all students for distribution calculations
             var allStudents = await StudentService.GetAllAsync();
-            
+            if (allStudents.Count == 0)
+            {
+                Snackbar.Add("Veritabanında öğrenci kaydı bulunamadı. Rapor oluşturulamadı.", Severity.Warning);
+                return;
+            }
+
             // Filter to active students only (exclude graduates) - same as dashboard
             var activeStudents = allStudents.Where(s => !s.MezunMu).ToList();
             
@@ -1063,7 +1068,7 @@ else
             );
             
             await JS.InvokeVoidAsync("downloadFile", $"kapsamli_rapor_{DateTime.Now:yyyyMMdd_HHmmss}.pdf", Convert.ToBase64String(pdfBytes));
-            Snackbar.Add("Kapsamlı PDF raporu oluşturuldu.", Severity.Success);
+            Snackbar.Add($"Kapsamlı PDF raporu oluşturuldu ({pdfBytes.Length / 1024} KB, {allStudents.Count} öğrenci).", Severity.Success);
         }
         catch (Exception ex)
         {

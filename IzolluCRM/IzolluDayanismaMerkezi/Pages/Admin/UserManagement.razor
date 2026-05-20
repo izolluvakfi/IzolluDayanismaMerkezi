@@ -144,12 +144,22 @@
             }
             <MudTextField @bind-Value="_formDisplayName" Label="Görünen Ad"
                           Variant="Variant.Outlined" Class="mb-3" />
-            <MudSelect T="UserRole" @bind-Value="_formRole" Label="Rol"
-                       Required="true" Variant="Variant.Outlined" Class="mb-3">
-                <MudSelectItem Value="@UserRole.SuperAdmin">Super Admin — Tam yetki + kullanıcı yönetimi</MudSelectItem>
-                <MudSelectItem Value="@UserRole.Admin">Admin — Okuma + Yazma + Silme + Import</MudSelectItem>
-                <MudSelectItem Value="@UserRole.ReadOnly">Okuma — Sadece görüntüleme ve export</MudSelectItem>
-            </MudSelect>
+            <div class="mb-3">
+                <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151; font-size:0.9rem;">Rol *</label>
+                <MudRadioGroup T="UserRole" @bind-Value="_formRole">
+                    <div class="d-flex flex-column" style="gap: 6px;">
+                        <MudRadio T="UserRole" Value="@UserRole.SuperAdmin" Color="Color.Error" Dense="true">
+                            <strong>Super Admin</strong> &mdash; <span style="color:#6b7280;">Tam yetki + kullanıcı yönetimi</span>
+                        </MudRadio>
+                        <MudRadio T="UserRole" Value="@UserRole.Admin" Color="Color.Primary" Dense="true">
+                            <strong>Admin</strong> &mdash; <span style="color:#6b7280;">Okuma + Yazma + Silme + Import</span>
+                        </MudRadio>
+                        <MudRadio T="UserRole" Value="@UserRole.ReadOnly" Color="Color.Success" Dense="true">
+                            <strong>Okuma</strong> &mdash; <span style="color:#6b7280;">Sadece görüntüleme ve export</span>
+                        </MudRadio>
+                    </div>
+                </MudRadioGroup>
+            </div>
             @if (_editingUser != null)
             {
                 <MudCheckBox @bind-Value="_formIsActive" Label="Aktif kullanıcı" Color="Color.Primary" />

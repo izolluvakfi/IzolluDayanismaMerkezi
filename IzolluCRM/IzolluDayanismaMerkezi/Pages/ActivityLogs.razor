@@ -1,5 +1,4 @@
 @page "/activity-logs"
-@using Microsoft.AspNetCore.Components.Forms
 @inject ActivityLogService LogService
 @inject AuthService AuthService
 @inject IJSRuntime JS
@@ -7,53 +6,59 @@
 <PageTitle>Aktivite Logları - İzollu Dayanışma Merkezi</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4">
-    <MudCard Class="mb-4">
-        <MudCardContent>
-            <MudText Typo="Typo.h6" Class="mb-4">Filtreler</MudText>
-            <MudGrid Spacing="3">
-                <MudItem xs="12" md="3">
-                    <label class="form-label"><strong>Başlangıç Tarihi</strong></label>
-                    <InputDate @bind-Value="_startDate" class="form-control" />
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <label class="form-label"><strong>Bitiş Tarihi</strong></label>
-                    <InputDate @bind-Value="_endDate" class="form-control" />
-                </MudItem>
-                <MudItem xs="12" md="2">
-                    <MudSelect T="string" @bind-Value="_selectedType" Label="İşlem Tipi" Variant="Variant.Outlined" Dense="true">
+    <MudPaper Elevation="2" Class="pa-4 mb-4" Style="border-radius: 12px;">
+        <MudText Typo="Typo.subtitle1" Class="mb-3" Style="font-weight: 600;">
+            <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Class="mr-2" Style="font-size: 18px; vertical-align: middle;" />
+            Filtreler
+        </MudText>
+        <MudGrid Spacing="3" AlignItems="MudBlazor.AlignItems.End">
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker @bind-Date="_startDate" Label="Başlangıç Tarihi"
+                               Variant="Variant.Outlined" Margin="Margin.Dense"
+                               DateFormat="dd.MM.yyyy" Editable="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker @bind-Date="_endDate" Label="Bitiş Tarihi"
+                               Variant="Variant.Outlined" Margin="Margin.Dense"
+                               DateFormat="dd.MM.yyyy" Editable="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="@(AuthService.IsSuperAdmin ? 2 : 3)">
+                <MudSelect T="string" @bind-Value="_selectedType" Label="İşlem Tipi"
+                           Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem Value="@("Tümü")">Tümü</MudSelectItem>
+                    <MudSelectItem Value="@("OgrenciEkle")">Öğrenci Ekle</MudSelectItem>
+                    <MudSelectItem Value="@("OgrenciGuncelle")">Öğrenci Güncelle</MudSelectItem>
+                    <MudSelectItem Value="@("OgrenciSil")">Öğrenci Sil</MudSelectItem>
+                    <MudSelectItem Value="@("OgrenciMezun")">Öğrenci Mezun</MudSelectItem>
+                    <MudSelectItem Value="@("BursKesildi")">Burs Kesildi</MudSelectItem>
+                    <MudSelectItem Value="@("IsAdamiEkle")">İş Adamı Ekle</MudSelectItem>
+                    <MudSelectItem Value="@("UyeEkle")">Üye Ekle</MudSelectItem>
+                    <MudSelectItem Value="@("DonemAc")">Dönem Aç</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            @if (AuthService.IsSuperAdmin)
+            {
+                <MudItem xs="12" sm="6" md="2">
+                    <MudSelect T="string" @bind-Value="_selectedUser" Label="Kullanıcı"
+                               Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@("Tümü")">Tümü</MudSelectItem>
-                        <MudSelectItem Value="@("OgrenciEkle")">Öğrenci Ekle</MudSelectItem>
-                        <MudSelectItem Value="@("OgrenciGuncelle")">Öğrenci Güncelle</MudSelectItem>
-                        <MudSelectItem Value="@("OgrenciSil")">Öğrenci Sil</MudSelectItem>
-                        <MudSelectItem Value="@("OgrenciMezun")">Öğrenci Mezun</MudSelectItem>
-                        <MudSelectItem Value="@("BursKesildi")">Burs Kesildi</MudSelectItem>
-                        <MudSelectItem Value="@("IsAdamiEkle")">İş Adamı Ekle</MudSelectItem>
-                        <MudSelectItem Value="@("UyeEkle")">Üye Ekle</MudSelectItem>
-                        <MudSelectItem Value="@("DonemAc")">Dönem Aç</MudSelectItem>
+                        @foreach (var u in _users)
+                        {
+                            <MudSelectItem Value="@u">@u</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudItem>
-                @if (AuthService.IsSuperAdmin)
-                {
-                    <MudItem xs="12" md="2">
-                        <MudSelect T="string" @bind-Value="_selectedUser" Label="Kullanıcı" Variant="Variant.Outlined" Dense="true">
-                            <MudSelectItem Value="@("Tümü")">Tümü</MudSelectItem>
-                            @foreach (var u in _users)
-                            {
-                                <MudSelectItem Value="@u">@u</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                }
-                <MudItem xs="12" md="2" Class="d-flex align-end">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                               OnClick="FilterLogs" FullWidth="true" Size="Size.Large"
-                               StartIcon="@Icons.Material.Filled.FilterAlt">
-                        Filtrele
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudCardContent>
-    </MudCard>
+            }
+            <MudItem xs="12" sm="6" md="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           OnClick="FilterLogs" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Search"
+                           Style="height: 40px;">
+                    Filtrele
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
 
     <MudTable Items="@_logs" Dense="true" Hover="true" Loading="@_loading">
         <HeaderContent>

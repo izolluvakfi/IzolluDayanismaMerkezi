@@ -128,8 +128,6 @@
         _showError = false;
         StateHasChanged();
 
-        await Task.Delay(500);
-
         var user = await RbacService.ValidateUserAsync(_username, _password);
         if (user != null)
         {
@@ -137,17 +135,15 @@
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "izollu_session",
                 $"{{\"userId\":{user.Id}}}");
             Snackbar.Add($"Hoş geldiniz, {user.DisplayName ?? user.Username}! ({AuthService.GetRoleDisplayName()})", Severity.Success);
-            await Task.Delay(500);
             NavigationManager.NavigateTo("/");
         }
         else
         {
             _showError = true;
             Snackbar.Add("Giriş başarısız!", Severity.Error);
+            _isLoading = false;
+            StateHasChanged();
         }
-
-        _isLoading = false;
-        StateHasChanged();
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)

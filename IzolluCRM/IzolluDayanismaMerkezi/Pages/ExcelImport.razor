@@ -221,9 +221,14 @@
         try
         {
             var students = await StudentService.GetAllAsync();
+            if (students.Count == 0)
+            {
+                Snackbar.Add("Veritabanında öğrenci kaydı bulunamadı.", Severity.Warning);
+                return;
+            }
             var fileBytes = ExcelService.ExportStudents(students);
             await JS.InvokeVoidAsync("downloadFile", $"ogrenciler_{DateTime.Now:yyyyMMdd}.xlsx", Convert.ToBase64String(fileBytes));
-            Snackbar.Add("Öğrenci listesi dışa aktarıldı.", Severity.Success);
+            Snackbar.Add($"{students.Count} öğrenci dışa aktarıldı ({fileBytes.Length / 1024} KB).", Severity.Success);
         }
         catch (Exception ex)
         {
@@ -298,9 +303,14 @@
         try
         {
             var members = await MemberService.GetAllAsync();
+            if (members.Count == 0)
+            {
+                Snackbar.Add("Veritabanında üye kaydı bulunamadı.", Severity.Warning);
+                return;
+            }
             var fileBytes = ExcelService.ExportMembers(members);
             await JS.InvokeVoidAsync("downloadFile", $"uyeler_{DateTime.Now:yyyyMMdd}.xlsx", Convert.ToBase64String(fileBytes));
-            Snackbar.Add("Üye listesi dışa aktarıldı.", Severity.Success);
+            Snackbar.Add($"{members.Count} üye dışa aktarıldı ({fileBytes.Length / 1024} KB).", Severity.Success);
         }
         catch (Exception ex)
         {
@@ -369,9 +379,14 @@
         try
         {
             var graduatedStudents = await StudentService.GetGraduatedStudentsAsync();
+            if (graduatedStudents.Count == 0)
+            {
+                Snackbar.Add("Veritabanında mezun öğrenci kaydı bulunamadı.", Severity.Warning);
+                return;
+            }
             var fileBytes = ExcelService.ExportGraduatedStudents(graduatedStudents);
             await JS.InvokeVoidAsync("downloadFile", $"mezun_ogrenciler_{DateTime.Now:yyyyMMdd}.xlsx", Convert.ToBase64String(fileBytes));
-            Snackbar.Add("Mezun öğrenci listesi dışa aktarıldı.", Severity.Success);
+            Snackbar.Add($"{graduatedStudents.Count} mezun öğrenci dışa aktarıldı ({fileBytes.Length / 1024} KB).", Severity.Success);
         }
         catch (Exception ex)
         {
