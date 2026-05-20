@@ -11,7 +11,7 @@
             <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Class="mr-2" Style="font-size: 18px; vertical-align: middle;" />
             Filtreler
         </MudText>
-        <MudGrid Spacing="3" AlignItems="MudBlazor.AlignItems.End">
+        <MudGrid Spacing="3" Style="align-items: end;">
             <MudItem xs="12" sm="6" md="3">
                 <MudDatePicker @bind-Date="_startDate" Label="Başlangıç Tarihi"
                                Variant="Variant.Outlined" Margin="Margin.Dense"
@@ -23,30 +23,36 @@
                                DateFormat="dd.MM.yyyy" Editable="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="@(AuthService.IsSuperAdmin ? 2 : 3)">
-                <MudSelect T="string" @bind-Value="_selectedType" Label="İşlem Tipi"
-                           Variant="Variant.Outlined" Margin="Margin.Dense">
-                    <MudSelectItem Value="@("Tümü")">Tümü</MudSelectItem>
-                    <MudSelectItem Value="@("OgrenciEkle")">Öğrenci Ekle</MudSelectItem>
-                    <MudSelectItem Value="@("OgrenciGuncelle")">Öğrenci Güncelle</MudSelectItem>
-                    <MudSelectItem Value="@("OgrenciSil")">Öğrenci Sil</MudSelectItem>
-                    <MudSelectItem Value="@("OgrenciMezun")">Öğrenci Mezun</MudSelectItem>
-                    <MudSelectItem Value="@("BursKesildi")">Burs Kesildi</MudSelectItem>
-                    <MudSelectItem Value="@("IsAdamiEkle")">İş Adamı Ekle</MudSelectItem>
-                    <MudSelectItem Value="@("UyeEkle")">Üye Ekle</MudSelectItem>
-                    <MudSelectItem Value="@("DonemAc")">Dönem Aç</MudSelectItem>
-                </MudSelect>
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 0.75rem; margin-bottom: 2px;">İşlem Tipi</label>
+                    <select id="activity-log-type-select" class="selectpicker form-control" data-live-search="false" data-width="100%"
+                            @onchange="@(e => _selectedType = e.Value?.ToString() ?? "Tümü")">
+                        <option value="Tümü" selected="@(_selectedType == "Tümü")">Tümü</option>
+                        <option value="OgrenciEkle" selected="@(_selectedType == "OgrenciEkle")">Öğrenci Ekle</option>
+                        <option value="OgrenciGuncelle" selected="@(_selectedType == "OgrenciGuncelle")">Öğrenci Güncelle</option>
+                        <option value="OgrenciSil" selected="@(_selectedType == "OgrenciSil")">Öğrenci Sil</option>
+                        <option value="OgrenciMezun" selected="@(_selectedType == "OgrenciMezun")">Öğrenci Mezun</option>
+                        <option value="BursKesildi" selected="@(_selectedType == "BursKesildi")">Burs Kesildi</option>
+                        <option value="IsAdamiEkle" selected="@(_selectedType == "IsAdamiEkle")">İş Adamı Ekle</option>
+                        <option value="UyeEkle" selected="@(_selectedType == "UyeEkle")">Üye Ekle</option>
+                        <option value="DonemAc" selected="@(_selectedType == "DonemAc")">Dönem Aç</option>
+                    </select>
+                </div>
             </MudItem>
             @if (AuthService.IsSuperAdmin)
             {
                 <MudItem xs="12" sm="6" md="2">
-                    <MudSelect T="string" @bind-Value="_selectedUser" Label="Kullanıcı"
-                               Variant="Variant.Outlined" Margin="Margin.Dense">
-                        <MudSelectItem Value="@("Tümü")">Tümü</MudSelectItem>
-                        @foreach (var u in _users)
-                        {
-                            <MudSelectItem Value="@u">@u</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.75rem; margin-bottom: 2px;">Kullanıcı</label>
+                        <select id="activity-log-user-select" class="selectpicker form-control" data-live-search="true" data-width="100%"
+                                @onchange="@(e => _selectedUser = e.Value?.ToString() ?? "Tümü")">
+                            <option value="Tümü" selected="@(_selectedUser == "Tümü")">Tümü</option>
+                            @foreach (var u in _users)
+                            {
+                                <option value="@u" selected="@(_selectedUser == u)">@u</option>
+                            }
+                        </select>
+                    </div>
                 </MudItem>
             }
             <MudItem xs="12" sm="6" md="2">
@@ -94,6 +100,21 @@
         if (AuthService.IsSuperAdmin)
             _users = await LogService.GetDistinctUsersAsync();
         await LoadData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("bootstrapSelect.init");
+            }
+            catch (JSDisconnectedException)
+            {
+                // Component disposed, ignore
+            }
+        }
     }
 
     private async Task LoadData()
