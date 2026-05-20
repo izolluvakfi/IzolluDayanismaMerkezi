@@ -135,7 +135,7 @@
             AuthService.SetUser(user);
             Snackbar.Add($"Hoş geldiniz, {user.DisplayName ?? user.Username}! ({AuthService.GetRoleDisplayName()})", Severity.Success);
             await Task.Delay(500);
-            NavigationManager.NavigateTo("/", forceLoad: true);
+            NavigationManager.NavigateTo("/");
         }
         else
         {

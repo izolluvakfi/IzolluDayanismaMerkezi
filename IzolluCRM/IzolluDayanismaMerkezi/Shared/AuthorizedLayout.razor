@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
@@ -30,9 +31,20 @@ else
 @code {
     protected override void OnInitialized()
     {
+        AuthService.OnAuthStateChanged += OnAuthStateChanged;
         var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
         if (!currentPath.StartsWith("login") && !AuthService.IsAuthenticated)
             Navigation.NavigateTo("/login", true);
+    }
+
+    private void OnAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnAuthStateChanged -= OnAuthStateChanged;
     }
 
     private void HandleLogout()
