@@ -59,14 +59,23 @@ Write-Host "[5/5] Commit ve push yapiliyor..." -ForegroundColor Yellow
 $commitMsg = "Latest changes - $(Get-Date -Format 'yyyy-MM-dd HH:mm') - DB/binary excluded"
 git commit -m $commitMsg
 
-Write-Host "      origin/master'a push ediliyor..." -ForegroundColor Yellow
-git push origin master
+# Remote'u hedef repoya ayarla
+$targetRepo = "https://github.com/izolluvakfi/IzolluDayanismaMerkezi.git"
+$existingRemote = git remote get-url izollu 2>$null
+if (-not $existingRemote) {
+    git remote add izollu $targetRepo
+} else {
+    git remote set-url izollu $targetRepo
+}
+
+Write-Host "      izollu/master'a push ediliyor: $targetRepo" -ForegroundColor Yellow
+git push izollu master
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
-    Write-Host "BASARILI! Repo: https://github.com/kaanbozbek/IzolluDayanismaMerkezi" -ForegroundColor Green
+    Write-Host "BASARILI! Repo: $targetRepo" -ForegroundColor Green
 } else {
     Write-Host ""
     Write-Host "HATA: Push basarisiz. Token/credential kontrolu yapiniz." -ForegroundColor Red
-    Write-Host "Ipucu: git push origin master --verbose" -ForegroundColor Yellow
+    Write-Host "Ipucu: git push izollu master --verbose" -ForegroundColor Yellow
 }
