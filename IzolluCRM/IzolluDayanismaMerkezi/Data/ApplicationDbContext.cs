@@ -3,6 +3,7 @@ using IzolluVakfi.Data.Entities;
 
 namespace IzolluVakfi.Data;
 
+
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -27,6 +28,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Term> Terms { get; set; }
     public DbSet<TermScholarshipConfig> TermScholarshipConfigs { get; set; }
     public DbSet<StudentScholarshipStatus> StudentScholarshipStatuses { get; set; }
+    public DbSet<AppUser> AppUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -193,6 +195,16 @@ public class ApplicationDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(e => e.TermId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AppUser>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.Property(e => e.Username).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.PasswordHash).IsRequired();
+            entity.Property(e => e.PasswordSalt).IsRequired();
+            entity.Property(e => e.DisplayName).HasMaxLength(200);
         });
     }
 }

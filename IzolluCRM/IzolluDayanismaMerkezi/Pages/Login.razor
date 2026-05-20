@@ -1,18 +1,16 @@
 @page "/login"
 @layout EmptyLayout
 @inject AuthService AuthService
+@inject RbacService RbacService
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
 <PageTitle>Giriş - İzollu Dayanışma Merkezi</PageTitle>
 
 <style>
-    /* Login page specific styles */
     .login-card {
         background-color: #ffffff !important;
     }
-    
-    /* Ensure no background on inputs */
     .login-input .mud-input-outlined .mud-input,
     .login-input .mud-input-outlined input {
         background: transparent !important;
@@ -116,32 +114,26 @@
 
     protected override void OnInitialized()
     {
-        // Eğer zaten giriş yapmışsa ana sayfaya yönlendir
         if (AuthService.IsAuthenticated)
-        {
             NavigationManager.NavigateTo("/");
-        }
     }
 
     private async Task HandleLogin()
     {
         await _form.Validate();
-
-        if (!_isValid)
-        {
-            return;
-        }
+        if (!_isValid) return;
 
         _isLoading = true;
         _showError = false;
         StateHasChanged();
 
-        // Gerçek dünyada async bir işlem simüle et
         await Task.Delay(500);
 
-        if (AuthService.Login(_username, _password))
+        var user = await RbacService.ValidateUserAsync(_username, _password);
+        if (user != null)
         {
-            Snackbar.Add("Giriş başarılı! Yönlendiriliyorsunuz...", Severity.Success);
+            AuthService.SetUser(user);
+            Snackbar.Add($"Hoş geldiniz, {user.DisplayName ?? user.Username}! ({AuthService.GetRoleDisplayName()})", Severity.Success);
             await Task.Delay(500);
             NavigationManager.NavigateTo("/", forceLoad: true);
         }
@@ -158,8 +150,6 @@
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter" && !_isLoading)
-        {
             await HandleLogin();
-        }
     }
 }

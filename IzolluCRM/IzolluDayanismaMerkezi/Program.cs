@@ -26,7 +26,6 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 });
 
 // Enable static web assets (for MudBlazor and other RCL packages)
-// Enabled unconditionally to ensure _content/* paths work from any domain
 builder.WebHost.UseStaticWebAssets();
 
 // Configure QuestPDF License
@@ -43,9 +42,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlite(connectionString, sqliteOptions =>
     {
-        sqliteOptions.CommandTimeout(60); // 60 seconds timeout
+        sqliteOptions.CommandTimeout(60);
     });
-    // Enable detailed errors in development
     if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging();
@@ -55,13 +53,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Add Application Services
 builder.Services.AddScoped<ActivityLogService>();
-builder.Services.AddScoped<StudentScholarshipStatusService>(); // Must be before MeetingService and TranscriptService
+builder.Services.AddScoped<StudentScholarshipStatusService>();
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<DonorService>();
 builder.Services.AddScoped<MemberService>();
 builder.Services.AddScoped<MemberScholarshipCommitmentService>();
-builder.Services.AddScoped<SystemSettingsService>(); // System-wide settings
-builder.Services.AddScoped<ScholarshipPaymentService>(); // Payment tracking
+builder.Services.AddScoped<SystemSettingsService>();
+builder.Services.AddScoped<ScholarshipPaymentService>();
 builder.Services.AddScoped<TranscriptService>();
 builder.Services.AddScoped<ExcelService>();
 builder.Services.AddScoped<PdfService>();
@@ -71,13 +69,16 @@ builder.Services.AddScoped<VillageService>();
 builder.Services.AddScoped<AidService>();
 builder.Services.AddScoped<TermService>();
 builder.Services.AddScoped<TermReportService>();
+builder.Services.AddScoped<RbacService>();
+
+// Scoped per Blazor circuit so each browser session has isolated auth state
+builder.Services.AddScoped<AuthService>();
 
 // Add Singleton Services
-builder.Services.AddSingleton<TermChangeNotifier>(); // Cross-component event notifications
-builder.Services.AddSingleton<AuthService>(); // Authentication service
+builder.Services.AddSingleton<TermChangeNotifier>();
 
 // Add Background Jobs
-builder.Services.AddHostedService<GradePromotionBackgroundJob>(); // Automatic grade promotion on August 1st
+builder.Services.AddHostedService<GradePromotionBackgroundJob>();
 
 var app = builder.Build();
 
@@ -88,42 +89,96 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// HTTPS redirection Railway/Docker'da devre disi - proxy SSL'i yonetiyor
-// app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-// Create database if it doesn't exist and initialize settings
+// Initialize database
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
-    
-    // Enable SQLite WAL mode for better concurrency and performance
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
     try
     {
+        // Bootstrap: ensure all pre-RBAC migrations are recorded in history
+        // This handles both: (1) EnsureCreated DBs with no history, and
+        // (2) DBs with partial history (e.g. only the last migration was recorded)
+        var conn = context.Database.GetDbConnection();
+        await conn.OpenAsync();
+
+        // Create __EFMigrationsHistory table if it doesn't exist
+        using (var createCmd = conn.CreateCommand())
+        {
+            createCmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                    ""MigrationId"" TEXT NOT NULL CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY,
+                    ""ProductVersion"" TEXT NOT NULL
+                )";
+            await createCmd.ExecuteNonQueryAsync();
+        }
+
+        // Ensure every pre-RBAC migration is recorded (INSERT OR IGNORE is safe to repeat)
+        var knownMigrations = new[]
+        {
+            "20251115192759_InitialCreate",
+            "20251115194550_AddFirmaToMember",
+            "20251115195621_AddVillagesTable",
+            "20251115201531_AddAidsTable",
+            "20251115201657_AddAcademicYearToCommitments",
+            "20251115211707_AddTermManagementTables",
+            "20251115213635_AddAcademicYearToAid",
+            "20251115214839_AddScholarshipCutTracking",
+            "20251115232931_AddFirmaToStudent",
+            "20251210154738_AddMemberPeriodFields",
+            "20251216181744_AddIsMalatyaUniversityToStudent",
+            "20251216191717_AddMemberMeetingAttendance",
+            "20251220100835_AddMeetingNotesAndAttendanceStatus",
+            "20251220114049_SyncWithDatabase",
+            "20251220120506_AddSektorToMember",
+            "20251222140844_AddStudentScholarshipStatus",
+            "20251222142453_AddTermIdToMeeting",
+            "20260104210357_AddIsMaxGradeReachedFlag"
+        };
+
+        foreach (var migration in knownMigrations)
+        {
+            using var insertCmd = conn.CreateCommand();
+            insertCmd.CommandText = $"INSERT OR IGNORE INTO \"__EFMigrationsHistory\" VALUES ('{migration}', '8.0.0')";
+            await insertCmd.ExecuteNonQueryAsync();
+        }
+
+        logger.LogInformation("Migration history verified ({Count} baseline migrations ensured).", knownMigrations.Length);
+        await conn.CloseAsync();
+
+        // Apply pending migrations (new RBAC migration will run here)
+        await context.Database.MigrateAsync();
+
+        // Enable SQLite WAL mode for better concurrency
         await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode = WAL;");
         await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;");
         await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;");
         await context.Database.ExecuteSqlRawAsync("PRAGMA mmap_size = 30000000000;");
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation("SQLite WAL mode and performance optimizations enabled");
+        logger.LogInformation("SQLite WAL mode and performance optimizations enabled.");
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Failed to enable SQLite WAL mode");
+        logger.LogWarning(ex, "Database initialization warning");
+        // Fallback to EnsureCreated if migration fails
+        context.Database.EnsureCreated();
     }
-    
+
     var settingsService = scope.ServiceProvider.GetRequiredService<SettingsService>();
     await settingsService.InitializeDefaultSettingsAsync();
-    
-    // Initialize system settings (creates if not exists)
+
     var systemSettingsService = scope.ServiceProvider.GetRequiredService<SystemSettingsService>();
     await systemSettingsService.GetOrCreateSettingsAsync();
+
+    // Seed default admin user if no users exist
+    var rbacService = scope.ServiceProvider.GetRequiredService<RbacService>();
+    await rbacService.SeedDefaultAdminAsync();
 }
 
 // Open browser automatically after startup (only when running locally)
@@ -136,13 +191,11 @@ if (app.Environment.IsDevelopment() || Environment.GetEnvironmentVariable("OPEN_
         {
             try
             {
-                // Wait for server to be fully ready
                 await Task.Delay(1500);
                 OpenBrowser("http://localhost:5000");
             }
             catch (Exception ex)
             {
-                // Silently fail if browser can't open
                 Debug.WriteLine($"Failed to open browser: {ex.Message}");
             }
         });
@@ -156,20 +209,11 @@ static void OpenBrowser(string url)
     try
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-        }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
             Process.Start("xdg-open", url);
-        }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
             Process.Start("open", url);
-        }
     }
-    catch
-    {
-        // Browser açılamazsa sessizce devam et
-    }
+    catch { }
 }

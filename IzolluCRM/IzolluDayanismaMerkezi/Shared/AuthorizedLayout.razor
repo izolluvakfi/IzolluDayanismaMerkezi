@@ -9,8 +9,8 @@
 @if (AuthService.IsAuthenticated)
 {
     <MudLayout>
-        <MudDrawer Open="true" 
-                   ClipMode="DrawerClipMode.Always" 
+        <MudDrawer Open="true"
+                   ClipMode="DrawerClipMode.Always"
                    Elevation="2"
                    Variant="@DrawerVariant.Persistent">
             <NavMenu OnLogout="@EventCallback.Factory.Create(this, HandleLogout)" />
@@ -30,12 +30,9 @@ else
 @code {
     protected override void OnInitialized()
     {
-        // Eğer login sayfasında değilse ve giriş yapmamışsa login'e yönlendir
         var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
         if (!currentPath.StartsWith("login") && !AuthService.IsAuthenticated)
-        {
             Navigation.NavigateTo("/login", true);
-        }
     }
 
     private void HandleLogout()

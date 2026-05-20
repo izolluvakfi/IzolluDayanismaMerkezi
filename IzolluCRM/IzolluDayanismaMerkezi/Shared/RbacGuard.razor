@@ -1,0 +1,21 @@
+@inject AuthService AuthService
+
+@if (AuthService.HasPermission(Permission))
+{
+    @ChildContent
+}
+else if (FallbackContent != null)
+{
+    @FallbackContent
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string Permission { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? FallbackContent { get; set; }
+}
