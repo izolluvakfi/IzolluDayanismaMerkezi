@@ -40,8 +40,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trigger Railway deploy
+      - name: Deploy to Railway
+        if: ${{ secrets.RAILWAY_TOKEN != '' }}
         env:
-          HOOK: ${{ secrets.RAILWAY_DEPLOY_HOOK }}
-        if: env.HOOK != ''
-        run: curl -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          railway redeploy --service IzolluDayanismaMerkezi --yes
