@@ -25,11 +25,33 @@ public class RbacService
 
         if (user == null) return null;
 
-        if (HashPassword(password, user.PasswordSalt) != user.PasswordHash) return null;
+        if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.Now)
+            return null;
 
+        if (HashPassword(password, user.PasswordSalt) != user.PasswordHash)
+        {
+            user.FailedLoginCount++;
+            if (user.FailedLoginCount >= 5)
+                user.LockoutEnd = DateTime.Now.AddYears(99);
+            await _context.SaveChangesAsync();
+            return null;
+        }
+
+        user.FailedLoginCount = 0;
+        user.LockoutEnd = null;
         user.LastLoginAt = DateTime.Now;
         await _context.SaveChangesAsync();
         return user;
+    }
+
+    public async Task UnlockUserAsync(int id)
+    {
+        var user = await _context.AppUsers.FindAsync(id);
+        if (user == null) return;
+        user.FailedLoginCount = 0;
+        user.LockoutEnd = null;
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("User unlocked: {Username}", user.Username);
     }
 
     public async Task<List<AppUser>> GetAllUsersAsync()

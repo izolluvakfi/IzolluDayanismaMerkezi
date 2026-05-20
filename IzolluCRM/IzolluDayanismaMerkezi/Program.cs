@@ -140,7 +140,8 @@ using (var scope = app.Services.CreateScope())
             "20251220120506_AddSektorToMember",
             "20251222140844_AddStudentScholarshipStatus",
             "20251222142453_AddTermIdToMeeting",
-            "20260104210357_AddIsMaxGradeReachedFlag"
+            "20260104210357_AddIsMaxGradeReachedFlag",
+            "20260520000000_AddRbacSystem"
         };
 
         foreach (var migration in knownMigrations)

@@ -27,4 +27,8 @@ public class AppUser
 
     [StringLength(200)]
     public string? DisplayName { get; set; }
+
+    public int FailedLoginCount { get; set; } = 0;
+
+    public DateTime? LockoutEnd { get; set; }
 }

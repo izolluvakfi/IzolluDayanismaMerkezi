@@ -1,7 +1,9 @@
 @inject AuthService AuthService
+@inject RbacService RbacService
+@inject ISnackbar Snackbar
 
 <div class="izollu-nav-menu sidebar">
-    <!-- Logo Section -->
+    <!-- Logo -->
     <div class="nav-header logo-container drawer-logo" style="margin-bottom: 10px;">
         <img src="/izollu-vakfi.png" alt="İzollu Dayanışma Merkezi" class="nav-logo" />
     </div>
@@ -13,120 +15,86 @@
         </div>
         <div class="user-details">
             <MudText Typo="Typo.body2" Style="font-weight: 600; color: #374151; font-size: 0.8rem;">@AuthService.DisplayName</MudText>
-            <MudChip T="string" Size="Size.Small" Color="@GetRoleChipColor()" Variant="Variant.Filled" Style="height: 18px; font-size: 0.65rem; margin-top: 2px;">
-                @AuthService.GetRoleDisplayName()
-            </MudChip>
         </div>
     </div>
 
     <!-- ANA MENÜ -->
     <div class="nav-section-title menu-title">ANA MENÜ</div>
-
     <MudNavMenu Dense="true" Class="nav-menu">
-        <MudNavLink Href="/reports"
-                    Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Dashboard"
-                    Class="nav-item menu-item"
-                    ActiveClass="nav-item-active">
+                    Class="nav-item menu-item" ActiveClass="nav-item-active">
             Dashboard
         </MudNavLink>
     </MudNavMenu>
 
     <!-- İŞLEMLER -->
     <div class="nav-section-title menu-title">İŞLEMLER</div>
-
     <MudNavMenu Dense="true" Class="nav-menu">
-        <MudNavLink Href="/students"
-                    Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="/students" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.School"
-                    Class="nav-item menu-item"
-                    ActiveClass="nav-item-active">
+                    Class="nav-item menu-item" ActiveClass="nav-item-active">
             Öğrenciler
         </MudNavLink>
-
-        <MudNavLink Href="/members"
-                    Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="/members" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.People"
-                    Class="nav-item menu-item"
-                    ActiveClass="nav-item-active">
+                    Class="nav-item menu-item" ActiveClass="nav-item-active">
             Üyeler
         </MudNavLink>
-
-        <MudNavLink Href="/villages"
-                    Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="/villages" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.LocationCity"
-                    Class="nav-item menu-item"
-                    ActiveClass="nav-item-active">
+                    Class="nav-item menu-item" ActiveClass="nav-item-active">
             Köyler
         </MudNavLink>
-
-        <MudNavLink Href="/aids"
-                    Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="/aids" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.VolunteerActivism"
-                    Class="nav-item menu-item"
-                    ActiveClass="nav-item-active">
+                    Class="nav-item menu-item" ActiveClass="nav-item-active">
             Yardımlar
         </MudNavLink>
-
-        <MudNavLink Href="/meetings"
-                    Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="/meetings" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Event"
-                    Class="nav-item menu-item"
-                    ActiveClass="nav-item-active">
+                    Class="nav-item menu-item" ActiveClass="nav-item-active">
             Toplantılar
         </MudNavLink>
     </MudNavMenu>
 
-    <!-- SİSTEM - Admin ve SuperAdmin -->
+    <!-- SİSTEM VE YÖNETİM -->
     @if (AuthService.HasPermission(Permissions.Settings))
     {
-        <div class="nav-section-title menu-title">SİSTEM</div>
-
+        <div class="nav-section-title menu-title">SİSTEM VE YÖNETİM</div>
         <MudNavMenu Dense="true" Class="nav-menu">
-            <MudNavLink Href="/excel-import"
-                        Match="NavLinkMatch.Prefix"
+            <MudNavLink Href="/excel-import" Match="NavLinkMatch.Prefix"
                         Icon="@Icons.Material.Filled.UploadFile"
-                        Class="nav-item menu-item"
-                        ActiveClass="nav-item-active">
+                        Class="nav-item menu-item" ActiveClass="nav-item-active">
                 Excel İçe Aktar
             </MudNavLink>
-
-            <MudNavLink Href="/activity-logs"
-                        Match="NavLinkMatch.Prefix"
+            <MudNavLink Href="/activity-logs" Match="NavLinkMatch.Prefix"
                         Icon="@Icons.Material.Filled.History"
-                        Class="nav-item menu-item"
-                        ActiveClass="nav-item-active">
+                        Class="nav-item menu-item" ActiveClass="nav-item-active">
                 Aktivite Logları
             </MudNavLink>
-
-            <MudNavLink Href="/settings"
-                        Match="NavLinkMatch.Prefix"
+            <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix"
                         Icon="@Icons.Material.Filled.Settings"
-                        Class="nav-item menu-item"
-                        ActiveClass="nav-item-active">
+                        Class="nav-item menu-item" ActiveClass="nav-item-active">
                 Ayarlar
             </MudNavLink>
+            @if (AuthService.HasPermission(Permissions.UserManagement))
+            {
+                <MudNavLink Href="/admin/users" Match="NavLinkMatch.Prefix"
+                            Icon="@Icons.Material.Filled.ManageAccounts"
+                            Class="nav-item menu-item admin-item" ActiveClass="nav-item-active">
+                    Kullanıcı Yönetimi
+                </MudNavLink>
+            }
         </MudNavMenu>
     }
 
-    <!-- YÖNETİM - Sadece SuperAdmin -->
-    @if (AuthService.HasPermission(Permissions.UserManagement))
-    {
-        <div class="nav-section-title menu-title" Style="color: #ef4444;">YÖNETİM</div>
-
-        <MudNavMenu Dense="true" Class="nav-menu">
-            <MudNavLink Href="/admin/users"
-                        Match="NavLinkMatch.Prefix"
-                        Icon="@Icons.Material.Filled.ManageAccounts"
-                        Class="nav-item menu-item admin-item"
-                        ActiveClass="nav-item-active">
-                Kullanıcı & Rol Yönetimi
-            </MudNavLink>
-        </MudNavMenu>
-    }
-
-    <!-- Footer Section -->
+    <!-- Footer -->
     <div class="nav-footer logout-section">
+        <div class="nav-footer-link password-link menu-item" @onclick="OpenPasswordDialog">
+            <MudIcon Icon="@Icons.Material.Filled.Lock" />
+            <span>Şifre Değiştir</span>
+        </div>
         <div class="nav-footer-link logout-link menu-item" @onclick="HandleLogoutClick">
             <MudIcon Icon="@Icons.Material.Filled.Logout" />
             <span>Çıkış Yap</span>
@@ -134,22 +102,75 @@
     </div>
 </div>
 
-@code {
-    [Parameter]
-    public EventCallback OnLogout { get; set; }
+<!-- Şifre Değiştir Dialog -->
+<MudDialog @bind-Visible="_showPasswordDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Şifre Değiştir</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_currentPassword" Label="Mevcut Şifre"
+                      InputType="InputType.Password" Variant="Variant.Outlined" Class="mb-3" />
+        <MudTextField @bind-Value="_newPassword" Label="Yeni Şifre"
+                      InputType="InputType.Password" Variant="Variant.Outlined" Class="mb-2" />
+        <MudTextField @bind-Value="_newPasswordConfirm" Label="Yeni Şifre Tekrar"
+                      InputType="InputType.Password" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showPasswordDialog = false)">İptal</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="@SaveOwnPassword" Disabled="@_saving">
+            @(_saving ? "Değiştiriliyor..." : "Şifreyi Değiştir")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
-    private async Task HandleLogoutClick()
+@code {
+    [Parameter] public EventCallback OnLogout { get; set; }
+
+    private bool _showPasswordDialog;
+    private string _currentPassword = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _newPasswordConfirm = string.Empty;
+    private bool _saving;
+
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true };
+
+    private async Task HandleLogoutClick() => await OnLogout.InvokeAsync();
+
+    private void OpenPasswordDialog()
     {
-        await OnLogout.InvokeAsync();
+        _currentPassword = _newPassword = _newPasswordConfirm = string.Empty;
+        _showPasswordDialog = true;
     }
 
-    private Color GetRoleChipColor() => AuthService.Role switch
+    private async Task SaveOwnPassword()
     {
-        IzolluVakfi.Data.Enums.UserRole.SuperAdmin => Color.Error,
-        IzolluVakfi.Data.Enums.UserRole.Admin => Color.Primary,
-        IzolluVakfi.Data.Enums.UserRole.ReadOnly => Color.Success,
-        _ => Color.Default
-    };
+        if (string.IsNullOrWhiteSpace(_currentPassword))
+        {
+            Snackbar.Add("Mevcut şifrenizi girin.", Severity.Warning);
+            return;
+        }
+        if (_newPassword != _newPasswordConfirm)
+        {
+            Snackbar.Add("Yeni şifreler eşleşmiyor!", Severity.Error);
+            return;
+        }
+        var user = await RbacService.ValidateUserAsync(AuthService.Username, _currentPassword);
+        if (user == null)
+        {
+            Snackbar.Add("Mevcut şifre hatalı!", Severity.Error);
+            return;
+        }
+        _saving = true;
+        var result = await RbacService.ChangePasswordAsync(AuthService.UserId, _newPassword);
+        if (result.Success)
+        {
+            Snackbar.Add("Şifre başarıyla değiştirildi.", Severity.Success);
+            _showPasswordDialog = false;
+        }
+        else Snackbar.Add(result.Error, Severity.Error);
+        _saving = false;
+    }
 }
 
 <style>
@@ -180,174 +201,82 @@
     }
 
     .nav-logo {
-        max-width: 240px;
-        max-height: 132px;
-        width: auto;
-        height: auto;
-        object-fit: contain;
-        display: block;
-        margin: 0 auto;
+        max-width: 240px; max-height: 132px;
+        width: auto; height: auto;
+        object-fit: contain; display: block; margin: 0 auto;
         transition: transform 0.2s ease, opacity 0.2s ease;
     }
-
-    .nav-logo:hover {
-        transform: scale(1.03);
-        opacity: 0.9;
-        cursor: pointer;
-    }
+    .nav-logo:hover { transform: scale(1.03); opacity: 0.9; cursor: pointer; }
 
     .user-info-section {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        margin: 4px 8px 8px 8px;
-        background: #fef9f0;
-        border-radius: 12px;
-        border: 1px solid #fde68a;
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 14px; margin: 4px 8px 8px 8px;
+        background: #fef9f0; border-radius: 12px; border: 1px solid #fde68a;
         flex-shrink: 0;
     }
-
-    .user-avatar {
-        flex-shrink: 0;
-    }
-
-    .user-details {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
+    .user-avatar { flex-shrink: 0; }
+    .user-details { display: flex; flex-direction: column; min-width: 0; }
 
     .nav-section-title {
-        font-size: 0.65rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #9ca3af;
-        margin: 12px 0 6px 0.5rem;
-        font-weight: 600;
-        flex-shrink: 0;
+        font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+        color: #9ca3af; margin: 12px 0 6px 0.5rem; font-weight: 600; flex-shrink: 0;
     }
 
-    .nav-menu {
-        padding: 0 0.5rem 0;
-        overflow: hidden;
-        flex: 0 0 auto;
-    }
+    .nav-menu { padding: 0 0.5rem 0; overflow: hidden; flex: 0 0 auto; }
 
-    .nav-item,
-    .nav-item a,
-    .izollu-nav-menu a,
-    .izollu-nav-menu .mud-nav-link,
-    .mud-nav-link {
-        border-radius: 999px !important;
-        margin: 1px 2px !important;
-        padding: 10px 14px !important;
-        color: #4b5563;
-        transition: all 0.2s ease;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .nav-item, .nav-item a, .izollu-nav-menu a,
+    .izollu-nav-menu .mud-nav-link, .mud-nav-link {
+        border-radius: 999px !important; margin: 1px 2px !important;
+        padding: 10px 14px !important; color: #4b5563;
+        transition: all 0.2s ease; font-size: 0.85rem;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         text-decoration: none !important;
     }
 
-    .izollu-nav-menu a:hover,
-    .izollu-nav-menu a:focus,
-    .izollu-nav-menu a:active,
-    .mud-nav-link:hover,
-    .mud-nav-link:focus,
-    .mud-nav-link:active {
-        text-decoration: none !important;
-    }
+    .izollu-nav-menu a:hover, .izollu-nav-menu a:focus, .izollu-nav-menu a:active,
+    .mud-nav-link:hover, .mud-nav-link:focus, .mud-nav-link:active { text-decoration: none !important; }
 
-    .nav-item .mud-icon-root {
-        font-size: 18px;
-        margin-right: 0.35rem;
-        color: #6b7280;
-        flex-shrink: 0;
-    }
-
-    .nav-item:hover {
-        background: #fef3c7 !important;
-        color: #f59e0b;
-        transform: translateX(4px);
-    }
-
-    .nav-item:hover .mud-icon-root {
-        color: #f59e0b;
-    }
+    .nav-item .mud-icon-root { font-size: 18px; margin-right: 0.35rem; color: #6b7280; flex-shrink: 0; }
+    .nav-item:hover { background: #fef3c7 !important; color: #f59e0b; transform: translateX(4px); }
+    .nav-item:hover .mud-icon-root { color: #f59e0b; }
 
     .nav-item-active {
         background: linear-gradient(90deg, #ef9420, #f5a93c) !important;
-        color: white !important;
-        font-weight: 600;
+        color: white !important; font-weight: 600;
         box-shadow: 0 4px 12px rgba(239, 148, 32, 0.3);
     }
-
-    .nav-item-active .mud-icon-root {
-        color: white !important;
-    }
-
-    .admin-item .mud-icon-root {
-        color: #ef4444 !important;
-    }
-
-    .admin-item:hover {
-        background: #fee2e2 !important;
-        color: #ef4444 !important;
-    }
+    .nav-item-active .mud-icon-root { color: white !important; }
+    .admin-item .mud-icon-root { color: #ef4444 !important; }
+    .admin-item:hover { background: #fee2e2 !important; color: #ef4444 !important; }
 
     .nav-footer {
-        width: 100%;
-        padding: 0.5rem;
+        width: 100%; padding: 0.5rem;
         border-top: 1px solid #e2e8f0;
         background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
         margin-top: auto;
     }
 
     .nav-footer-link {
-        border-radius: 999px !important;
-        margin: 2px 2px !important;
-        padding: 8px 10px !important;
-        font-size: 0.85rem;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        color: #4b5563;
-        white-space: nowrap;
+        border-radius: 999px !important; margin: 2px 2px !important;
+        padding: 8px 10px !important; font-size: 0.85rem;
+        transition: all 0.2s ease; display: flex; align-items: center;
+        cursor: pointer; color: #4b5563; white-space: nowrap;
     }
+    .nav-footer-link .mud-icon-root { font-size: 18px; margin-right: 0.5rem; color: #6b7280; flex-shrink: 0; }
+    .nav-footer-link:hover { background: #f3f4f6 !important; transform: translateX(4px); }
 
-    .nav-footer-link .mud-icon-root {
-        font-size: 18px;
-        margin-right: 0.5rem;
-        color: #6b7280;
-        flex-shrink: 0;
-    }
+    .password-link { color: #4b5563 !important; font-weight: 500; }
+    .password-link:hover { background: #eff6ff !important; color: #3b82f6 !important; }
+    .password-link:hover .mud-icon-root { color: #3b82f6 !important; }
 
-    .nav-footer-link:hover {
-        background: #f3f4f6 !important;
-        transform: translateX(4px);
-    }
-
-    .logout-link {
-        color: #ef4444 !important;
-        font-weight: 500;
-    }
-
-    .logout-link:hover {
-        background: #fee2e2 !important;
-    }
-
-    .logout-link .mud-icon-root {
-        color: #ef4444 !important;
-    }
+    .logout-link { color: #ef4444 !important; font-weight: 500; }
+    .logout-link:hover { background: #fee2e2 !important; }
+    .logout-link .mud-icon-root { color: #ef4444 !important; }
 
     @@media (max-width: 768px) {
         .nav-header { height: 120px; padding: 10px 12px; }
         .nav-logo { max-width: 170px; max-height: 95px; }
     }
-
     @@media (max-width: 480px) {
         .nav-header { height: 100px; padding: 8px 8px; }
         .nav-logo { max-width: 140px; max-height: 80px; }

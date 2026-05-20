@@ -5,17 +5,15 @@
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 
-<PageTitle>Kullanıcı & Rol Yönetimi</PageTitle>
+<PageTitle>Kullanıcı Yönetimi</PageTitle>
 
 @if (!AuthService.HasPermission(Permissions.UserManagement))
 {
-    <MudAlert Severity="Severity.Error" Class="ma-4">
-        Bu sayfaya erişim yetkiniz yok. Sadece Super Admin kullanıcılar erişebilir.
-    </MudAlert>
+    <MudAlert Severity="Severity.Error" Class="ma-4">Bu sayfaya erişim yetkiniz yok.</MudAlert>
     return;
 }
 
-<MudText Typo="Typo.h5" Class="mb-1" Style="font-weight: 700;">Kullanıcı & Rol Yönetimi</MudText>
+<MudText Typo="Typo.h5" Class="mb-1" Style="font-weight: 700;">Kullanıcı Yönetimi</MudText>
 <MudText Typo="Typo.body2" Class="mb-4" Style="color: #6b7280;">Sistem kullanıcılarını ve rollerini buradan yönetin.</MudText>
 
 <!-- İzin Matrisi -->
@@ -27,31 +25,17 @@
     <MudTable Items="@_permissionMatrix" Dense="true" Hover="true" Striped="true" Elevation="0">
         <HeaderContent>
             <MudTh>Rol</MudTh>
-            <MudTh Style="text-align:center">Okuma (Read)</MudTh>
-            <MudTh Style="text-align:center">Yazma (Write)</MudTh>
-            <MudTh Style="text-align:center">Silme (Delete)</MudTh>
+            <MudTh Style="text-align:center">Okuma</MudTh>
+            <MudTh Style="text-align:center">Yazma</MudTh>
+            <MudTh Style="text-align:center">Silme</MudTh>
             <MudTh Style="text-align:center">Admin Panel</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd>
-                <MudChip T="string" Color="@context.Color" Size="Size.Small">@context.RoleName</MudChip>
-            </MudTd>
-            <MudTd Style="text-align:center">
-                @if (context.CanRead) { <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" /> }
-                else { <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" /> }
-            </MudTd>
-            <MudTd Style="text-align:center">
-                @if (context.CanWrite) { <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" /> }
-                else { <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" /> }
-            </MudTd>
-            <MudTd Style="text-align:center">
-                @if (context.CanDelete) { <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" /> }
-                else { <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" /> }
-            </MudTd>
-            <MudTd Style="text-align:center">
-                @if (context.HasAdminPanel) { <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" /> }
-                else { <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" /> }
-            </MudTd>
+            <MudTd><MudChip T="string" Color="@context.Color" Size="Size.Small">@context.RoleName</MudChip></MudTd>
+            <MudTd Style="text-align:center">@Icon(context.CanRead)</MudTd>
+            <MudTd Style="text-align:center">@Icon(context.CanWrite)</MudTd>
+            <MudTd Style="text-align:center">@Icon(context.CanDelete)</MudTd>
+            <MudTd Style="text-align:center">@Icon(context.HasAdminPanel)</MudTd>
         </RowTemplate>
     </MudTable>
 </MudPaper>
@@ -63,10 +47,8 @@
             <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" Style="font-size: 18px;" />
             Kullanıcılar (@_users.Count)
         </MudText>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.PersonAdd"
-                   Size="Size.Small"
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PersonAdd" Size="Size.Small"
                    OnClick="@OpenAddUserDialog">
             Kullanıcı Ekle
         </MudButton>
@@ -106,151 +88,108 @@
                     </MudChip>
                 </MudTd>
                 <MudTd>
-                    @if (context.IsActive)
+                    @if (context.LockoutEnd.HasValue && context.LockoutEnd > DateTime.Now)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error">Kilitli</MudChip>
+                    }
+                    else if (context.IsActive)
                     {
                         <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Aktif</MudChip>
                     }
                     else
                     {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">Pasif</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">Pasif</MudChip>
                     }
                 </MudTd>
-                <MudTd>
-                    @(context.LastLoginAt.HasValue ? context.LastLoginAt.Value.ToString("dd.MM.yyyy HH:mm") : "—")
-                </MudTd>
+                <MudTd>@(context.LastLoginAt.HasValue ? context.LastLoginAt.Value.ToString("dd.MM.yyyy HH:mm") : "—")</MudTd>
                 <MudTd>@context.CreatedAt.ToString("dd.MM.yyyy")</MudTd>
                 <MudTd Style="text-align:right">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                   Size="Size.Small"
-                                   Color="Color.Primary"
-                                   OnClick="@(() => OpenEditUserDialog(context))" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Lock"
-                                   Size="Size.Small"
-                                   Color="Color.Warning"
-                                   OnClick="@(() => OpenChangePasswordDialog(context))" />
+                    @if (context.LockoutEnd.HasValue && context.LockoutEnd > DateTime.Now)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.LockOpen" Size="Size.Small"
+                                       Color="Color.Warning" OnClick="@(() => UnlockUser(context))" />
+                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                   Color="Color.Primary" OnClick="@(() => OpenEditUserDialog(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Lock" Size="Size.Small"
+                                   Color="Color.Warning" OnClick="@(() => OpenChangePasswordDialog(context))" />
                     @if (context.Username != AuthService.Username)
                     {
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       Size="Size.Small"
-                                       Color="Color.Error"
-                                       OnClick="@(() => ConfirmDeleteUser(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                       Color="Color.Error" OnClick="@(() => ConfirmDeleteUser(context))" />
                     }
                 </MudTd>
             </RowTemplate>
-            <NoRecordsContent>
-                <MudText>Kullanıcı bulunamadı.</MudText>
-            </NoRecordsContent>
+            <NoRecordsContent><MudText>Kullanıcı bulunamadı.</MudText></NoRecordsContent>
         </MudTable>
     }
 </MudPaper>
 
 <!-- Kullanıcı Ekle/Düzenle Dialog -->
-@if (_showUserDialog)
-{
-    <MudDialog Visible="true" Options="@_dialogOptions">
-        <TitleContent>
-            <MudText Typo="Typo.h6">@(_editingUser == null ? "Yeni Kullanıcı Ekle" : "Kullanıcı Düzenle")</MudText>
-        </TitleContent>
-        <DialogContent>
-            <MudForm @ref="_userForm" @bind-IsValid="_userFormValid">
-                @if (_editingUser == null)
-                {
-                    <MudTextField @bind-Value="_formUsername"
-                                  Label="Kullanıcı Adı"
-                                  Required="true"
-                                  RequiredError="Kullanıcı adı gerekli"
-                                  Variant="Variant.Outlined"
-                                  Class="mb-3" />
-                    <MudTextField @bind-Value="_formPassword"
-                                  Label="Şifre"
-                                  InputType="InputType.Password"
-                                  Required="true"
-                                  RequiredError="Şifre gerekli (min 6 karakter)"
-                                  Variant="Variant.Outlined"
-                                  Class="mb-3" />
-                }
-                <MudTextField @bind-Value="_formDisplayName"
-                              Label="Görünen Ad"
-                              Variant="Variant.Outlined"
-                              Class="mb-3" />
-                <MudSelect @bind-Value="_formRole"
-                           Label="Rol"
-                           Required="true"
-                           Variant="Variant.Outlined"
-                           Class="mb-3">
-                    <MudSelectItem Value="@IzolluVakfi.Data.Enums.UserRole.SuperAdmin">
-                        <div class="d-flex align-center gap-2">
-                            <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Small" Color="Color.Error" />
-                            Super Admin — Kullanıcı yönetimi dahil tam yetki
-                        </div>
-                    </MudSelectItem>
-                    <MudSelectItem Value="@IzolluVakfi.Data.Enums.UserRole.Admin">
-                        <div class="d-flex align-center gap-2">
-                            <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" Size="Size.Small" Color="Color.Primary" />
-                            Admin — Okuma + Yazma + Silme + Import + Ayarlar
-                        </div>
-                    </MudSelectItem>
-                    <MudSelectItem Value="@IzolluVakfi.Data.Enums.UserRole.ReadOnly">
-                        <div class="d-flex align-center gap-2">
-                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Success" />
-                            Okuma — Sadece görüntüleme ve export
-                        </div>
-                    </MudSelectItem>
-                </MudSelect>
-                @if (_editingUser != null)
-                {
-                    <MudCheckBox @bind-Value="_formIsActive" Label="Aktif kullanıcı" Color="Color.Primary" />
-                }
-            </MudForm>
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="@(() => _showUserDialog = false)">İptal</MudButton>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       OnClick="@SaveUser"
-                       Disabled="@_saving">
-                @(_saving ? "Kaydediliyor..." : "Kaydet")
-            </MudButton>
-        </DialogActions>
-    </MudDialog>
-}
+<MudDialog @bind-Visible="_showUserDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_editingUser == null ? "Yeni Kullanıcı Ekle" : "Kullanıcı Düzenle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_userForm" @bind-IsValid="_userFormValid">
+            @if (_editingUser == null)
+            {
+                <MudTextField @bind-Value="_formUsername" Label="Kullanıcı Adı"
+                              Required="true" RequiredError="Kullanıcı adı gerekli"
+                              Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="_formPassword" Label="Şifre"
+                              InputType="InputType.Password"
+                              Required="true" RequiredError="Şifre gerekli (min 6 karakter)"
+                              Variant="Variant.Outlined" Class="mb-3" />
+            }
+            <MudTextField @bind-Value="_formDisplayName" Label="Görünen Ad"
+                          Variant="Variant.Outlined" Class="mb-3" />
+            <MudSelect T="UserRole" @bind-Value="_formRole" Label="Rol"
+                       Required="true" Variant="Variant.Outlined" Class="mb-3">
+                <MudSelectItem Value="@UserRole.SuperAdmin">Super Admin — Tam yetki + kullanıcı yönetimi</MudSelectItem>
+                <MudSelectItem Value="@UserRole.Admin">Admin — Okuma + Yazma + Silme + Import</MudSelectItem>
+                <MudSelectItem Value="@UserRole.ReadOnly">Okuma — Sadece görüntüleme ve export</MudSelectItem>
+            </MudSelect>
+            @if (_editingUser != null)
+            {
+                <MudCheckBox @bind-Value="_formIsActive" Label="Aktif kullanıcı" Color="Color.Primary" />
+            }
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showUserDialog = false)">İptal</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="@SaveUser" Disabled="@_saving">
+            @(_saving ? "Kaydediliyor..." : "Kaydet")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
 <!-- Şifre Değiştir Dialog -->
-@if (_showPasswordDialog)
-{
-    <MudDialog Visible="true" Options="@_dialogOptions">
-        <TitleContent>
-            <MudText Typo="Typo.h6">Şifre Değiştir — @_passwordTargetUser?.Username</MudText>
-        </TitleContent>
-        <DialogContent>
-            <MudTextField @bind-Value="_newPassword"
-                          Label="Yeni Şifre"
-                          InputType="InputType.Password"
-                          Variant="Variant.Outlined"
-                          Class="mb-2" />
-            <MudTextField @bind-Value="_newPasswordConfirm"
-                          Label="Şifre Tekrar"
-                          InputType="InputType.Password"
-                          Variant="Variant.Outlined" />
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="@(() => _showPasswordDialog = false)">İptal</MudButton>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Warning"
-                       OnClick="@SavePassword"
-                       Disabled="@_saving">
-                @(_saving ? "Değiştiriliyor..." : "Şifreyi Değiştir")
-            </MudButton>
-        </DialogActions>
-    </MudDialog>
-}
+<MudDialog @bind-Visible="_showPasswordDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Şifre Değiştir — @_passwordTargetUser?.Username</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newPassword" Label="Yeni Şifre"
+                      InputType="InputType.Password" Variant="Variant.Outlined" Class="mb-2" />
+        <MudTextField @bind-Value="_newPasswordConfirm" Label="Şifre Tekrar"
+                      InputType="InputType.Password" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showPasswordDialog = false)">İptal</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning"
+                   OnClick="@SavePassword" Disabled="@_saving">
+            @(_saving ? "Değiştiriliyor..." : "Şifreyi Değiştir")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     private List<AppUser> _users = new();
     private bool _loading = true;
     private bool _saving;
 
-    // User dialog state
     private bool _showUserDialog;
     private AppUser? _editingUser;
     private MudForm _userForm = null!;
@@ -258,16 +197,15 @@
     private string _formUsername = string.Empty;
     private string _formPassword = string.Empty;
     private string _formDisplayName = string.Empty;
-    private IzolluVakfi.Data.Enums.UserRole _formRole = IzolluVakfi.Data.Enums.UserRole.ReadOnly;
+    private UserRole _formRole = UserRole.ReadOnly;
     private bool _formIsActive = true;
 
-    // Password dialog state
     private bool _showPasswordDialog;
     private AppUser? _passwordTargetUser;
     private string _newPassword = string.Empty;
     private string _newPasswordConfirm = string.Empty;
 
-    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true };
 
     private List<PermissionRow> _permissionMatrix = new()
     {
@@ -278,11 +216,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!AuthService.HasPermission(Permissions.UserManagement))
-        {
-            Navigation.NavigateTo("/");
-            return;
-        }
+        if (!AuthService.HasPermission(Permissions.UserManagement)) { Navigation.NavigateTo("/"); return; }
         await LoadUsers();
     }
 
@@ -296,10 +230,8 @@
     private void OpenAddUserDialog()
     {
         _editingUser = null;
-        _formUsername = string.Empty;
-        _formPassword = string.Empty;
-        _formDisplayName = string.Empty;
-        _formRole = IzolluVakfi.Data.Enums.UserRole.ReadOnly;
+        _formUsername = _formPassword = _formDisplayName = string.Empty;
+        _formRole = UserRole.ReadOnly;
         _formIsActive = true;
         _showUserDialog = true;
     }
@@ -318,16 +250,9 @@
     private async Task SaveUser()
     {
         _saving = true;
-        (bool Success, string Error) result;
-
-        if (_editingUser == null)
-        {
-            result = await RbacService.CreateUserAsync(_formUsername, _formPassword, _formRole, _formDisplayName);
-        }
-        else
-        {
-            result = await RbacService.UpdateUserAsync(_editingUser.Id, _formRole, _formDisplayName, _formIsActive);
-        }
+        var result = _editingUser == null
+            ? await RbacService.CreateUserAsync(_formUsername, _formPassword, _formRole, _formDisplayName)
+            : await RbacService.UpdateUserAsync(_editingUser.Id, _formRole, _formDisplayName, _formIsActive);
 
         if (result.Success)
         {
@@ -339,82 +264,63 @@
         {
             Snackbar.Add(result.Error, Severity.Error);
         }
-
         _saving = false;
     }
 
     private void OpenChangePasswordDialog(AppUser user)
     {
         _passwordTargetUser = user;
-        _newPassword = string.Empty;
-        _newPasswordConfirm = string.Empty;
+        _newPassword = _newPasswordConfirm = string.Empty;
         _showPasswordDialog = true;
     }
 
     private async Task SavePassword()
     {
-        if (_newPassword != _newPasswordConfirm)
-        {
-            Snackbar.Add("Şifreler eşleşmiyor!", Severity.Error);
-            return;
-        }
-
+        if (_newPassword != _newPasswordConfirm) { Snackbar.Add("Şifreler eşleşmiyor!", Severity.Error); return; }
         _saving = true;
         var result = await RbacService.ChangePasswordAsync(_passwordTargetUser!.Id, _newPassword);
-
-        if (result.Success)
-        {
-            Snackbar.Add("Şifre değiştirildi.", Severity.Success);
-            _showPasswordDialog = false;
-        }
-        else
-        {
-            Snackbar.Add(result.Error, Severity.Error);
-        }
-
+        if (result.Success) { Snackbar.Add("Şifre değiştirildi.", Severity.Success); _showPasswordDialog = false; }
+        else Snackbar.Add(result.Error, Severity.Error);
         _saving = false;
+    }
+
+    private async Task UnlockUser(AppUser user)
+    {
+        await RbacService.UnlockUserAsync(user.Id);
+        Snackbar.Add($"{user.Username} kullanıcısının kilidi açıldı.", Severity.Success);
+        await LoadUsers();
     }
 
     private async Task ConfirmDeleteUser(AppUser user)
     {
-        var confirmed = await DialogService.ShowMessageBox(
-            "Kullanıcı Sil",
+        var confirmed = await DialogService.ShowMessageBox("Kullanıcı Sil",
             $"'{user.Username}' kullanıcısını silmek istediğinizden emin misiniz?",
-            yesText: "Evet, Sil",
-            noText: "İptal");
-
+            yesText: "Evet, Sil", noText: "İptal");
         if (confirmed == true)
         {
             var result = await RbacService.DeleteUserAsync(user.Id);
-            if (result.Success)
-            {
-                Snackbar.Add("Kullanıcı silindi.", Severity.Success);
-                await LoadUsers();
-            }
-            else
-            {
-                Snackbar.Add(result.Error, Severity.Error);
-            }
+            if (result.Success) { Snackbar.Add("Kullanıcı silindi.", Severity.Success); await LoadUsers(); }
+            else Snackbar.Add(result.Error, Severity.Error);
         }
     }
 
-    private static Color GetRoleColor(IzolluVakfi.Data.Enums.UserRole role) => role switch
+    private RenderFragment Icon(bool ok) => ok
+        ? @<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+        : @<MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" />;
+
+    private static Color GetRoleColor(UserRole role) => role switch
     {
-        IzolluVakfi.Data.Enums.UserRole.SuperAdmin => Color.Error,
-        IzolluVakfi.Data.Enums.UserRole.Admin => Color.Primary,
-        IzolluVakfi.Data.Enums.UserRole.ReadOnly => Color.Success,
-        _ => Color.Default
+        UserRole.SuperAdmin => Color.Error,
+        UserRole.Admin => Color.Primary,
+        _ => Color.Success
     };
 
-    private static string GetRoleDisplayName(IzolluVakfi.Data.Enums.UserRole role) => role switch
+    private static string GetRoleDisplayName(UserRole role) => role switch
     {
-        IzolluVakfi.Data.Enums.UserRole.SuperAdmin => "Super Admin",
-        IzolluVakfi.Data.Enums.UserRole.Admin => "Admin",
-        IzolluVakfi.Data.Enums.UserRole.ReadOnly => "Okuma",
-        _ => "Bilinmiyor"
+        UserRole.SuperAdmin => "Super Admin",
+        UserRole.Admin => "Admin",
+        _ => "Okuma"
     };
 
-    private record PermissionRow(
-        string RoleName, Color Color,
-        bool CanRead, bool CanWrite, bool CanDelete, bool HasAdminPanel);
+    private record PermissionRow(string RoleName, Color Color, bool CanRead, bool CanWrite, bool CanDelete, bool HasAdminPanel);
 }

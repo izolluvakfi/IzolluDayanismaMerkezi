@@ -1,6 +1,7 @@
 @page "/activity-logs"
 @using Microsoft.AspNetCore.Components.Forms
 @inject ActivityLogService LogService
+@inject AuthService AuthService
 @inject IJSRuntime JS
 
 <PageTitle>Aktivite Logları - İzollu Dayanışma Merkezi</PageTitle>
@@ -18,30 +19,34 @@
                     <label class="form-label"><strong>Bitiş Tarihi</strong></label>
                     <InputDate @bind-Value="_endDate" class="form-control" />
                 </MudItem>
-                <MudItem xs="12" md="4">
-                    <MudText Typo="Typo.subtitle2" Class="mb-2"><strong>İşlem Tipi</strong></MudText>
-                    <div>
-                        <select id="activity-type-filter" class="selectpicker" data-width="100%" 
-                                data-style="btn-outline-primary" data-live-search="true"
-                                @onchange="OnTypeChanged" title="Tümü">
-                            <option value="Tümü">Tümü</option>
-                            <option value="OgrenciEkle">Öğrenci Ekle</option>
-                            <option value="OgrenciGuncelle">Öğrenci Güncelle</option>
-                            <option value="OgrenciSil">Öğrenci Sil</option>
-                            <option value="OgrenciMezun">Öğrenci Mezun</option>
-                            <option value="BursKesildi">Burs Kesildi</option>
-                            <option value="IsAdamiEkle">İş Adamı Ekle</option>
-                            <option value="UyeEkle">Üye Ekle</option>
-                            <option value="DonemAc">Dönem Aç</option>
-                        </select>
-                    </div>
+                <MudItem xs="12" md="2">
+                    <MudSelect T="string" @bind-Value="_selectedType" Label="İşlem Tipi" Variant="Variant.Outlined" Dense="true">
+                        <MudSelectItem Value="@("Tümü")">Tümü</MudSelectItem>
+                        <MudSelectItem Value="@("OgrenciEkle")">Öğrenci Ekle</MudSelectItem>
+                        <MudSelectItem Value="@("OgrenciGuncelle")">Öğrenci Güncelle</MudSelectItem>
+                        <MudSelectItem Value="@("OgrenciSil")">Öğrenci Sil</MudSelectItem>
+                        <MudSelectItem Value="@("OgrenciMezun")">Öğrenci Mezun</MudSelectItem>
+                        <MudSelectItem Value="@("BursKesildi")">Burs Kesildi</MudSelectItem>
+                        <MudSelectItem Value="@("IsAdamiEkle")">İş Adamı Ekle</MudSelectItem>
+                        <MudSelectItem Value="@("UyeEkle")">Üye Ekle</MudSelectItem>
+                        <MudSelectItem Value="@("DonemAc")">Dönem Aç</MudSelectItem>
+                    </MudSelect>
                 </MudItem>
+                @if (AuthService.IsSuperAdmin)
+                {
+                    <MudItem xs="12" md="2">
+                        <MudSelect T="string" @bind-Value="_selectedUser" Label="Kullanıcı" Variant="Variant.Outlined" Dense="true">
+                            <MudSelectItem Value="@("Tümü")">Tümü</MudSelectItem>
+                            @foreach (var u in _users)
+                            {
+                                <MudSelectItem Value="@u">@u</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
                 <MudItem xs="12" md="2" Class="d-flex align-end">
-                    <MudButton Variant="Variant.Filled" 
-                               Color="Color.Primary" 
-                               OnClick="FilterLogs" 
-                               FullWidth="true"
-                               Size="Size.Large"
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="FilterLogs" FullWidth="true" Size="Size.Large"
                                StartIcon="@Icons.Material.Filled.FilterAlt">
                         Filtrele
                     </MudButton>
@@ -50,59 +55,40 @@
         </MudCardContent>
     </MudCard>
 
-<MudTable Items="@_logs" Dense="true" Hover="true" Loading="@_loading">
-    <HeaderContent>
-        <MudTh>Tarih</MudTh>
-        <MudTh>Kullanıcı</MudTh>
-        <MudTh>İşlem Tipi</MudTh>
-        <MudTh>Detay</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Tarih">@context.Tarih.ToString("dd/MM/yyyy HH:mm:ss")</MudTd>
-        <MudTd DataLabel="Kullanıcı">
-            <MudChip T="string" Size="Size.Small">@context.KullaniciAdi</MudChip>
-        </MudTd>
-        <MudTd DataLabel="İşlem Tipi">
-            <MudChip T="string" Size="Size.Small" Color="@GetChipColor(context.IslemTipi)">@context.IslemTipi</MudChip>
-        </MudTd>
-        <MudTd DataLabel="Detay">@context.Detay</MudTd>
-    </RowTemplate>
-</MudTable>
+    <MudTable Items="@_logs" Dense="true" Hover="true" Loading="@_loading">
+        <HeaderContent>
+            <MudTh>Tarih</MudTh>
+            <MudTh>Kullanıcı</MudTh>
+            <MudTh>İşlem Tipi</MudTh>
+            <MudTh>Detay</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Tarih">@context.Tarih.ToString("dd/MM/yyyy HH:mm:ss")</MudTd>
+            <MudTd DataLabel="Kullanıcı">
+                <MudChip T="string" Size="Size.Small">@context.KullaniciAdi</MudChip>
+            </MudTd>
+            <MudTd DataLabel="İşlem Tipi">
+                <MudChip T="string" Size="Size.Small" Color="@GetChipColor(context.IslemTipi)">@context.IslemTipi</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Detay">@context.Detay</MudTd>
+        </RowTemplate>
+    </MudTable>
 </MudContainer>
 
 @code {
     private List<ActivityLog> _logs = new();
+    private List<string> _users = new();
     private bool _loading = true;
     private DateTime? _startDate;
     private DateTime? _endDate;
     private string _selectedType = "Tümü";
-    private bool _selectPickerInitialized = false;
+    private string _selectedUser = "Tümü";
 
     protected override async Task OnInitializedAsync()
     {
+        if (AuthService.IsSuperAdmin)
+            _users = await LogService.GetDistinctUsersAsync();
         await LoadData();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender || !_selectPickerInitialized)
-        {
-            await Task.Delay(200);
-            await InitializeSelectPickerAsync();
-        }
-    }
-
-    private async Task InitializeSelectPickerAsync()
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("eval", "if (typeof jQuery !== 'undefined') { jQuery('.selectpicker').selectpicker('refresh'); }");
-            _selectPickerInitialized = true;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Bootstrap select initialization error: {ex.Message}");
-        }
     }
 
     private async Task LoadData()
@@ -112,41 +98,29 @@
         _loading = false;
     }
 
-    private void OnTypeChanged(ChangeEventArgs e)
-    {
-        _selectedType = e.Value?.ToString() ?? "Tümü";
-    }
-
     private async Task FilterLogs()
     {
         _loading = true;
 
-        if (_startDate != null && _endDate != null)
-        {
-            _logs = await LogService.GetByDateRangeAsync(_startDate.Value, _endDate.Value);
-        }
-        else
-        {
-            _logs = await LogService.GetAllAsync();
-        }
+        _logs = (_startDate != null && _endDate != null)
+            ? await LogService.GetByDateRangeAsync(_startDate.Value, _endDate.Value)
+            : await LogService.GetAllAsync();
 
         if (_selectedType != "Tümü")
-        {
             _logs = _logs.Where(l => l.IslemTipi == _selectedType).ToList();
-        }
+
+        if (AuthService.IsSuperAdmin && _selectedUser != "Tümü")
+            _logs = _logs.Where(l => l.KullaniciAdi == _selectedUser).ToList();
 
         _loading = false;
     }
 
-    private Color GetChipColor(string islemTipi)
+    private Color GetChipColor(string islemTipi) => islemTipi switch
     {
-        return islemTipi switch
-        {
-            "OgrenciEkle" or "IsAdamiEkle" or "UyeEkle" or "DonemAc" => Color.Success,
-            "OgrenciSil" or "IsAdamiSil" or "UyeSil" or "BursKesildi" => Color.Error,
-            "OgrenciMezun" => Color.Info,
-            "OgrenciGuncelle" or "IsAdamiGuncelle" or "UyeGuncelle" => Color.Warning,
-            _ => Color.Default
-        };
-    }
+        "OgrenciEkle" or "IsAdamiEkle" or "UyeEkle" or "DonemAc" => Color.Success,
+        "OgrenciSil" or "IsAdamiSil" or "UyeSil" or "BursKesildi" => Color.Error,
+        "OgrenciMezun" => Color.Info,
+        "OgrenciGuncelle" or "IsAdamiGuncelle" or "UyeGuncelle" => Color.Warning,
+        _ => Color.Default
+    };
 }

@@ -57,4 +57,21 @@ public class ActivityLogService
             .OrderByDescending(a => a.Tarih)
             .ToListAsync();
     }
+
+    public async Task<List<ActivityLog>> GetByUserAsync(string kullaniciAdi)
+    {
+        return await _context.ActivityLogs
+            .Where(a => a.KullaniciAdi == kullaniciAdi)
+            .OrderByDescending(a => a.Tarih)
+            .ToListAsync();
+    }
+
+    public async Task<List<string>> GetDistinctUsersAsync()
+    {
+        return await _context.ActivityLogs
+            .Select(a => a.KullaniciAdi)
+            .Distinct()
+            .OrderBy(u => u)
+            .ToListAsync();
+    }
 }
