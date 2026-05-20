@@ -34,15 +34,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Publish ciktisini kopyala
 COPY --from=build /app/publish .
 
-# Veri dizini: SQLite DB icin kalici volume noktasi
-# Railway/Render/Fly.io'da bu dizini volume olarak baglayin
-RUN mkdir -p /app/data
-ENV DATABASE_PATH=/app/data/izolluvakfi.db
+# Seed DB: ilk deploy'da /data/'ya kopyalanir, sonrasinda volume'daki veri kullanilir
+COPY izolluvakfi.db /app/seed/izolluvakfi.db
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Port
 EXPOSE 5000
 ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Baslangic
-ENTRYPOINT ["dotnet", "IzolluVakfi.dll"]
+ENTRYPOINT ["/app/entrypoint.sh"]
