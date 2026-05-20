@@ -116,4 +116,33 @@ public class MemberScholarshipCommitmentService
 
         return (donorCount, totalMonthly, totalYearly, totalPledged, totalGiven);
     }
+
+    /// <summary>
+    /// Update YearlyAmountPerScholarship for all commitments in a specific period
+    /// </summary>
+    public async Task<int> UpdateAmountByPeriodAsync(string academicYear, decimal newYearlyAmount)
+    {
+        var commitments = await _context.MemberScholarshipCommitments
+            .Where(c => c.AcademicYear == academicYear)
+            .ToListAsync();
+
+        if (!commitments.Any())
+        {
+            _logger.LogInformation("No commitments found for period {Period}", academicYear);
+            return 0;
+        }
+
+        foreach (var commitment in commitments)
+        {
+            commitment.YearlyAmountPerScholarship = newYearlyAmount;
+            commitment.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Updated {Count} commitments for period {Period} to YearlyAmount={Amount}",
+            commitments.Count, academicYear, newYearlyAmount);
+
+        return commitments.Count;
+    }
 }

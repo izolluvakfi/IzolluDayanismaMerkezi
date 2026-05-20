@@ -26,6 +26,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Aid> Aids { get; set; }
     public DbSet<Term> Terms { get; set; }
     public DbSet<TermScholarshipConfig> TermScholarshipConfigs { get; set; }
+    public DbSet<StudentScholarshipStatus> StudentScholarshipStatuses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -166,6 +167,32 @@ public class ApplicationDbContext : DbContext
             // Index for payment date queries
             entity.HasIndex(e => e.PaymentDate)
                   .HasDatabaseName("IX_ScholarshipPayments_PaymentDate");
+        });
+
+        // Configure StudentScholarshipStatus entity
+        modelBuilder.Entity<StudentScholarshipStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CutReason).HasMaxLength(500);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+
+            // Unique constraint: one status per student per term per month
+            entity.HasIndex(e => new { e.StudentId, e.TermId, e.Month, e.Year })
+                  .IsUnique()
+                  .HasDatabaseName("IX_StudentScholarshipStatus_Unique");
+
+            // Foreign key relationships
+            entity.HasOne(e => e.Student)
+                  .WithMany()
+                  .HasForeignKey(e => e.StudentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Term)
+                  .WithMany()
+                  .HasForeignKey(e => e.TermId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

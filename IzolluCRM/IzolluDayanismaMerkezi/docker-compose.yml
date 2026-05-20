@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  izollu-crm:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      # SQLite DB'nin kalici kalmasini saglar
+      - izollu-data:/app/data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # DB'yi volume dizinine yonlendir
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/izolluvakfi.db
+    restart: unless-stopped
+
+volumes:
+  izollu-data:
+    driver: local

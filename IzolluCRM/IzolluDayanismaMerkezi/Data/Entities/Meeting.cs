@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IzolluVakfi.Data.Entities;
 
@@ -29,6 +30,12 @@ public class Meeting
     public DateTime BitisTarihi { get; set; }
 
     public DateTime OlusturmaTarihi { get; set; }
+
+    // Term (Dönem) ilişkisi
+    public int? TermId { get; set; }
+    
+    [ForeignKey("TermId")]
+    public virtual Term? Term { get; set; }
 
     public virtual ICollection<StudentMeetingAttendance> Attendances { get; set; } = new List<StudentMeetingAttendance>();
     public virtual ICollection<MemberMeetingAttendance> MemberAttendances { get; set; } = new List<MemberMeetingAttendance>();

@@ -7,13 +7,16 @@
 @inject TranscriptService TranscriptService
 @inject MeetingService MeetingService
 @inject ExcelService ExcelService
+@inject MemberScholarshipCommitmentService CommitmentService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
 <PageTitle>Ayarlar - İzollu Dayanışma Merkezi</PageTitle>
 
-<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mt-4">
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4">
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true">
     <MudTabPanel Text="Transkript Kontrolü">
         <MudCard Class="mt-4">
             <MudCardHeader>
@@ -337,6 +340,8 @@
     </MudTabPanel>
 </MudTabs>
 
+</MudContainer>
+
 @code {
     private List<string> _sektorler = new();
     private List<string> _universiteler = new();
@@ -507,8 +512,13 @@
             {
                 defaultPeriods.Add($"{startYear}-{startYear + 1}");
             }
-            _periods = defaultPeriods.OrderByDescending(p => p).ToList();
+            _periods = defaultPeriods.OrderBy(p => p).ToList();
             await SettingsService.SetListValueAsync("AcademicPeriods", _periods, "Akademik dönemler listesi");
+        }
+        else
+        {
+            // Mevcut dönemleri de küçükten büyüğe sırala
+            _periods = _periods.OrderBy(p => p).ToList();
         }
         
         // Load scholarship amounts
@@ -607,7 +617,19 @@
             {
                 existing.Amount = updatedAmount.Amount;
                 await SaveScholarshipAmounts();
-                Snackbar.Add("Burs tutarı güncellendi", Severity.Success);
+                
+                // Update all commitments for this period with the new yearly amount (8 months * monthly)
+                var yearlyAmount = updatedAmount.Amount * 8;
+                var updatedCount = await CommitmentService.UpdateAmountByPeriodAsync(amount.Period, yearlyAmount);
+                
+                if (updatedCount > 0)
+                {
+                    Snackbar.Add($"Burs tutarı güncellendi ve {updatedCount} taahhüt kaydı güncellendi", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Burs tutarı güncellendi", Severity.Success);
+                }
             }
         }
     }

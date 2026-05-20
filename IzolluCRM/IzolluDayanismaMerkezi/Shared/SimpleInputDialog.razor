@@ -7,6 +7,10 @@
     </TitleContent>
     <DialogContent>
         <MudPaper Elevation="0" Class="pa-3" Style="background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #667eea;">
+            @if (!string.IsNullOrEmpty(ContentText))
+            {
+                <MudText Typo="Typo.body2" Class="mb-3">@ContentText</MudText>
+            }
             <MudTextField @bind-Value="_inputValue" 
                          Label="@Label" 
                          Variant="Variant.Outlined" 
@@ -26,9 +30,19 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string Title { get; set; } = "Giriş";
     [Parameter] public string Label { get; set; } = "Değer";
+    [Parameter] public string ContentText { get; set; } = string.Empty;
+    [Parameter] public string DefaultValue { get; set; } = string.Empty;
     [Parameter] public InputType InputType { get; set; } = InputType.Text;
 
     private string _inputValue = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(DefaultValue))
+        {
+            _inputValue = DefaultValue;
+        }
+    }
 
     private void Submit() => MudDialog.Close(DialogResult.Ok(_inputValue));
     private void Cancel() => MudDialog.Cancel();

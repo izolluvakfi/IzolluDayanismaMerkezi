@@ -51,6 +51,11 @@ public class VillageService
         }
     }
 
+    public async Task<int> GetTotalCountAsync()
+    {
+        return await _context.Villages.CountAsync();
+    }
+
     public async Task<int> GetTotalPopulationAsync()
     {
         return await _context.Villages

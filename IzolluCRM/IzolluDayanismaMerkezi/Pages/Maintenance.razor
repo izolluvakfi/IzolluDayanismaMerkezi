@@ -1,5 +1,9 @@
 @page "/maintenance"
 @inject TranscriptService TranscriptService
+@inject MeetingService MeetingService
+@inject StudentService StudentService
+@inject TermService TermService
+@inject StudentScholarshipStatusService ScholarshipStatusService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -16,18 +20,59 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Transkript Kontrolü</MudText>
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-2" />
+                        Transkript Kontrolü
+                    </MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
                 <MudText Typo="Typo.body2" Class="mb-4">
                     GNO'su 2.0'ın altında olan öğrencilerin bursları otomatik olarak kesilecektir.
-                    Bu işlem geri alınamaz.
+                    Son toplantı tarihine göre ilgili ayın bursu kesilir.
                 </MudText>
+                
+                @if (_processingTranscript)
+                {
+                    <MudProgressLinear Color="Color.Warning" Indeterminate="true" Class="mb-2" />
+                }
+                
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" 
                            StartIcon="@Icons.Material.Filled.Warning"
-                           OnClick="RunTranscriptCheck" FullWidth="true">
+                           OnClick="RunTranscriptCheck" FullWidth="true"
+                           Disabled="_processingTranscript">
                     Transkript Kontrolünü Çalıştır
+                </MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.EventBusy" Class="mr-2" />
+                        Toplantı Kontrolü
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Class="mb-4">
+                    Son toplantıya katılmayan öğrencilerin bursları kesilir.
+                    Toplantı tarihine göre ilgili ayın bursu kesilir (Ekim-Mayıs).
+                </MudText>
+                
+                @if (_processingMeeting)
+                {
+                    <MudProgressLinear Color="Color.Error" Indeterminate="true" Class="mb-2" />
+                }
+                
+                <MudButton Variant="Variant.Filled" Color="Color.Error" 
+                           StartIcon="@Icons.Material.Filled.EventBusy"
+                           OnClick="RunMeetingCheck" FullWidth="true"
+                           Disabled="_processingMeeting">
+                    Toplantı Kontrolünü Çalıştır
                 </MudButton>
             </MudCardContent>
         </MudCard>
@@ -49,27 +94,212 @@
     </MudItem>
 </MudGrid>
 
+@* SONUÇ TABLOSU *@
+@if (_checkResults.Any())
+{
+    <MudPaper Class="pa-4 mt-4" Elevation="2">
+        <MudText Typo="Typo.h6" Class="mb-3">İşlem Sonuçları</MudText>
+        <MudTable Items="@_checkResults" Dense="true">
+            <HeaderContent>
+                <MudTh>Öğrenci</MudTh>
+                <MudTh>Durum</MudTh>
+                <MudTh>Mesaj</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.StudentName</MudTd>
+                <MudTd>
+                    <MudChip T="string" Color="@(context.Success ? Color.Success : Color.Error)" Size="Size.Small">
+                        @(context.Success ? "Başarılı" : "Hata")
+                    </MudChip>
+                </MudTd>
+                <MudTd>@context.Message</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+}
+
 @code {
+    private bool _processingTranscript = false;
+    private bool _processingMeeting = false;
+    private List<CheckResult> _checkResults = new();
+
     private async Task RunTranscriptCheck()
     {
         bool? result = await DialogService.ShowMessageBox(
             "Transkript Kontrolü",
-            "2'nin altında GNO'su olan öğrenciler için burs kontrolü yapılıyor. Emin misiniz?",
+            "GNO'su 2.0'ın altında olan öğrencilerin ilgili ay bursları kesilecek. Emin misiniz?",
             yesText: "Evet, Çalıştır",
             cancelText: "İptal",
             options: new DialogOptions { MaxWidth = MaxWidth.Small });
 
         if (result == true)
         {
+            _processingTranscript = true;
+            _checkResults.Clear();
+            StateHasChanged();
+
             try
             {
+                // Get active term
+                var activeTerm = await TermService.GetActiveTermAsync();
+                if (activeTerm == null)
+                {
+                    Snackbar.Add("Aktif dönem bulunamadı!", Severity.Error);
+                    return;
+                }
+
+                // Get students with low GNO
+                var studentsWithLowGno = await TranscriptService.GetStudentsWithLowGnoAsync();
+                
+                if (!studentsWithLowGno.Any())
+                {
+                    Snackbar.Add("GNO'su düşük öğrenci bulunamadı.", Severity.Info);
+                    return;
+                }
+
+                // Get latest meeting date for month determination
+                var latestMeeting = await MeetingService.GetLatestMeetingAsync();
+                if (latestMeeting == null)
+                {
+                    Snackbar.Add("Son toplantı tarihi bulunamadı!", Severity.Warning);
+                    return;
+                }
+
+                var meetingMonth = latestMeeting.Tarih.Month;
+                
+                // Check if meeting month is in scholarship period
+                if (!StudentScholarshipStatus.IsScholarshipMonth(meetingMonth))
+                {
+                    Snackbar.Add($"Toplantı tarihi ({latestMeeting.Tarih:dd.MM.yyyy}) burs dönemine (Ekim-Mayıs) dahil değil!", Severity.Warning);
+                    return;
+                }
+
+                foreach (var student in studentsWithLowGno)
+                {
+                    var cutResult = await ScholarshipStatusService.CutScholarshipByMeetingDateAsync(
+                        student.Id,
+                        activeTerm.Id,
+                        latestMeeting.Tarih,
+                        "Transkript GNO < 2.0",
+                        "Sistem");
+
+                    _checkResults.Add(new CheckResult
+                    {
+                        StudentName = student.AdSoyad,
+                        Success = cutResult.Success,
+                        Message = cutResult.Message
+                    });
+                }
+
+                // Also update student's main scholarship status
                 await TranscriptService.CheckAndUpdateScholarshipsAsync();
-                Snackbar.Add("Transkript kontrolü başarıyla tamamlandı.", Severity.Success);
+
+                Snackbar.Add($"Transkript kontrolü tamamlandı. {studentsWithLowGno.Count} öğrenci işlendi.", Severity.Success);
             }
             catch (Exception ex)
             {
                 Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
             }
+            finally
+            {
+                _processingTranscript = false;
+                StateHasChanged();
+            }
         }
+    }
+
+    private async Task RunMeetingCheck()
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Toplantı Kontrolü",
+            "Son toplantıya katılmayan öğrencilerin ilgili ay bursları kesilecek. Emin misiniz?",
+            yesText: "Evet, Çalıştır",
+            cancelText: "İptal",
+            options: new DialogOptions { MaxWidth = MaxWidth.Small });
+
+        if (result == true)
+        {
+            _processingMeeting = true;
+            _checkResults.Clear();
+            StateHasChanged();
+
+            try
+            {
+                // Get active term
+                var activeTerm = await TermService.GetActiveTermAsync();
+                if (activeTerm == null)
+                {
+                    Snackbar.Add("Aktif dönem bulunamadı!", Severity.Error);
+                    return;
+                }
+
+                // Get latest meeting
+                var latestMeeting = await MeetingService.GetLatestMeetingAsync();
+                if (latestMeeting == null)
+                {
+                    Snackbar.Add("Toplantı bulunamadı!", Severity.Warning);
+                    return;
+                }
+
+                var meetingMonth = latestMeeting.Tarih.Month;
+                
+                // Check if meeting month is in scholarship period
+                if (!StudentScholarshipStatus.IsScholarshipMonth(meetingMonth))
+                {
+                    Snackbar.Add($"Toplantı tarihi ({latestMeeting.Tarih:dd.MM.yyyy}) burs dönemine (Ekim-Mayıs) dahil değil! İşlem yapılmadı.", Severity.Warning);
+                    return;
+                }
+
+                // Get students who didn't attend
+                var absentStudents = await MeetingService.GetAbsentStudentsAsync(latestMeeting.Id);
+                
+                if (!absentStudents.Any())
+                {
+                    Snackbar.Add("Tüm öğrenciler toplantıya katılmış.", Severity.Info);
+                    return;
+                }
+
+                foreach (var student in absentStudents)
+                {
+                    var cutResult = await ScholarshipStatusService.CutScholarshipByMeetingDateAsync(
+                        student.Id,
+                        activeTerm.Id,
+                        latestMeeting.Tarih,
+                        "Toplantıya Katılmadı",
+                        "Sistem");
+
+                    _checkResults.Add(new CheckResult
+                    {
+                        StudentName = student.AdSoyad,
+                        Success = cutResult.Success,
+                        Message = cutResult.Message
+                    });
+
+                    // Also update student's main scholarship status
+                    if (cutResult.Success)
+                    {
+                        await StudentService.CutScholarshipAsync(student.Id, "Toplantıya Katılmadı");
+                    }
+                }
+
+                Snackbar.Add($"Toplantı kontrolü tamamlandı. {absentStudents.Count} öğrenci işlendi.", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                _processingMeeting = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private class CheckResult
+    {
+        public string StudentName { get; set; } = "";
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
     }
 }

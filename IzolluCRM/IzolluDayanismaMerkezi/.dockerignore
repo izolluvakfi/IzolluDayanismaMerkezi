@@ -1,0 +1,11 @@
+**/.git
+**/bin
+**/obj
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.db-backup*
+**/DB's
+**/Backup*
+**/.vs
+**/*.user

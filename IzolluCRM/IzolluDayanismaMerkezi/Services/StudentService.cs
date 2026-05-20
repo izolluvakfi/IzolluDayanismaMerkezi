@@ -22,7 +22,7 @@ public class StudentService
     {
         return await _context.Students
             .Include(s => s.Transcripts)
-            .OrderByDescending(s => s.OlusturmaTarihi)
+            .OrderBy(s => s.AdSoyad)
             .ToListAsync();
     }
 
@@ -31,7 +31,7 @@ public class StudentService
         return await _context.Students
             .Include(s => s.Transcripts)
             .Where(s => !s.MezunMu)
-            .OrderByDescending(s => s.OlusturmaTarihi)
+            .OrderBy(s => s.AdSoyad)
             .ToListAsync();
     }
 
@@ -220,5 +220,24 @@ public class StudentService
         }
 
         return trimmed.ToUpperInvariant();
+    }
+
+    /// <summary>
+    /// Cuts scholarship for a student with the given reason
+    /// </summary>
+    public async Task CutScholarshipAsync(int studentId, string reason)
+    {
+        var student = await _context.Students.FindAsync(studentId);
+        if (student == null) return;
+
+        student.AktifBursMu = false;
+        student.ScholarshipCutReason = reason;
+        student.ScholarshipCutDate = DateTime.Now;
+        student.GuncellemeTarihi = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+
+        await _logService.LogAsync("BursKesildi", 
+            $"{student.AdSoyad} - Burs kesildi: {reason}");
     }
 }

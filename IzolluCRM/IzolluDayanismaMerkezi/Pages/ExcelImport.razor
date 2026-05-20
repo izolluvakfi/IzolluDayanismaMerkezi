@@ -8,12 +8,12 @@
 
 <PageTitle>Excel ile Veri Yükle - İzollu Dayanışma Merkezi</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-4"><b>Excel ile Veri Yükle</b></MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4">
 
-<MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="false" PanelClass="pa-4">
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Outlined="false" PanelClass="pa-4" Style="border-radius: 12px;">
     <MudTabPanel Text="Öğrenciler" Icon="@Icons.Material.Filled.School">
-        <MudPaper Elevation="0" Class="pa-4 border rounded-lg">
-            <MudText Typo="Typo.h6" Class="mb-4">Öğrenci Verilerini Yükle</MudText>
+        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 12px;">
+            <MudText Typo="Typo.subtitle1" Class="mb-3"><b>Öğrenci Verilerini Yükle</b></MudText>
             
             <MudGrid Spacing="3">
                 <MudItem xs="12" md="6">
@@ -72,8 +72,8 @@
     </MudTabPanel>
 
     <MudTabPanel Text="Üyeler" Icon="@Icons.Material.Filled.People">
-        <MudPaper Elevation="0" Class="pa-4 border rounded-lg">
-            <MudText Typo="Typo.h6" Class="mb-4">Üye Verilerini Yükle</MudText>
+        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 12px;">
+            <MudText Typo="Typo.subtitle1" Class="mb-3"><b>Üye Verilerini Yükle</b></MudText>
             
             <MudGrid Spacing="3">
                 <MudItem xs="12" md="6">
@@ -130,6 +130,66 @@
             </MudGrid>
         </MudPaper>
     </MudTabPanel>
+
+    <MudTabPanel Text="Mezun Öğrenciler" Icon="@Icons.Material.Filled.EmojiEvents">
+        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 12px;">
+            <MudText Typo="Typo.subtitle1" Class="mb-3"><b>Mezun Öğrenci Verilerini Yükle</b></MudText>
+            
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="6">
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Info" 
+                               StartIcon="@Icons.Material.Filled.Download" 
+                               OnClick="DownloadGraduatedStudentTemplate" 
+                               FullWidth="true"
+                               Size="Size.Large">
+                        Örnek Excel'i İndir
+                    </MudButton>
+                </MudItem>
+                
+                <MudItem xs="12" md="6">
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Success" 
+                               StartIcon="@Icons.Material.Filled.Download" 
+                               OnClick="ExportGraduatedStudents" 
+                               FullWidth="true"
+                               Size="Size.Large">
+                        Mezun Öğrencileri Dışa Aktar
+                    </MudButton>
+                </MudItem>
+                
+                <MudItem xs="12" Class="mt-4">
+                    <MudFileUpload T="IBrowserFile" Accept=".xlsx" FilesChanged="UploadGraduatedStudentFile" MaximumFileCount="1">
+                        <ActivatorContent>
+                            <MudButton HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       Size="Size.Large"
+                                       FullWidth="true">
+                                Excel Dosyası Yükle
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                </MudItem>
+            
+            @if (_uploadingGraduatedStudents)
+            {
+                <MudItem xs="12">
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                    <MudText Typo="Typo.body2" Class="mt-2">Dosya işleniyor...</MudText>
+                </MudItem>
+            }
+            
+            @if (!string.IsNullOrEmpty(_graduatedUploadResult))
+            {
+                <MudItem xs="12">
+                    <MudAlert Severity="@_graduatedUploadSeverity" Variant="Variant.Outlined">@_graduatedUploadResult</MudAlert>
+                </MudItem>
+            }
+            </MudGrid>
+        </MudPaper>
+    </MudTabPanel>
 </MudTabs>
 
 @code {
@@ -140,6 +200,10 @@
     private bool _uploadingMembers = false;
     private string _memberUploadResult = "";
     private Severity _memberUploadSeverity = Severity.Info;
+
+    private bool _uploadingGraduatedStudents = false;
+    private string _graduatedUploadResult = "";
+    private Severity _graduatedUploadSeverity = Severity.Info;
 
     private async Task DownloadStudentTemplate()
     {
@@ -287,4 +351,76 @@
             _uploadingMembers = false;
         }
     }
+
+    // GRADUATED STUDENTS METHODS
+    private async Task DownloadGraduatedStudentTemplate()
+    {
+        try
+        {
+            var fileBytes = ExcelService.GenerateGraduatedStudentTemplate();
+            await JS.InvokeVoidAsync("downloadFile", "mezun_ogrenci_sablonu.xlsx", Convert.ToBase64String(fileBytes));
+            Snackbar.Add("Şablon dosyası indirildi.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ExportGraduatedStudents()
+    {
+        try
+        {
+            var graduatedStudents = await StudentService.GetGraduatedStudentsAsync();
+            var fileBytes = ExcelService.ExportGraduatedStudents(graduatedStudents);
+            await JS.InvokeVoidAsync("downloadFile", $"mezun_ogrenciler_{DateTime.Now:yyyyMMdd}.xlsx", Convert.ToBase64String(fileBytes));
+            Snackbar.Add("Mezun öğrenci listesi dışa aktarıldı.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task UploadGraduatedStudentFile(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        _uploadingGraduatedStudents = true;
+        _graduatedUploadResult = "";
+        StateHasChanged();
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            using (var fileStream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
+            {
+                await fileStream.CopyToAsync(memoryStream);
+            }
+            memoryStream.Position = 0;
+            
+            var graduatedStudents = ExcelService.ImportGraduatedStudents(memoryStream);
+
+            foreach (var student in graduatedStudents)
+            {
+                await StudentService.CreateAsync(student);
+            }
+
+            _graduatedUploadResult = $"Başarıyla {graduatedStudents.Count} mezun öğrenci eklendi.";
+            _graduatedUploadSeverity = Severity.Success;
+            Snackbar.Add(_graduatedUploadResult, Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _graduatedUploadResult = $"Hata: {ex.Message}";
+            _graduatedUploadSeverity = Severity.Error;
+            Snackbar.Add(_graduatedUploadResult, Severity.Error);
+        }
+        finally
+        {
+            _uploadingGraduatedStudents = false;
+        }
+    }
 }
+
+</MudContainer>

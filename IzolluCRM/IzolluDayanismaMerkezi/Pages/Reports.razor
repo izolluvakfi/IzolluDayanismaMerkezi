@@ -7,6 +7,9 @@
 @inject MemberScholarshipCommitmentService CommitmentService
 @inject SystemSettingsService SystemSettingsService
 @inject AidService AidService
+@inject VillageService VillageService
+@inject StudentScholarshipStatusService ScholarshipStatusService
+@inject TermService TermService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
@@ -111,7 +114,56 @@
         width: 100%;
         overflow-x: auto;
     }
+    
+    /* Yatay Bar Grafiği Stilleri */
+    .horizontal-bar-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 0;
+    }
+    .horizontal-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .horizontal-bar-label {
+        width: 200px;
+        min-width: 200px;
+        font-size: 0.85rem;
+        color: #374151;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .horizontal-bar-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 28px;
+        background: #f3f4f6;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+    }
+    .horizontal-bar-fill {
+        height: 100%;
+        border-radius: 6px;
+        min-width: 4px;
+        transition: width 0.5s ease;
+    }
+    .horizontal-bar-value {
+        position: absolute;
+        right: 10px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+    }
 </style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4">
 
 @if (_loading)
 {
@@ -119,33 +171,33 @@
 }
 else
 {
-    <!-- Dönem Filtresi ve PDF Butonu -->
-    <MudGrid Class="mb-4" Spacing="3">
-        <MudItem xs="12" md="4">
-            <div class="period-filter-card">
-                <label class="form-label" style="font-weight: 600; color: #374151;">Dönem Filtresi</label>
-                <select id="report-period-filter" class="selectpicker" data-live-search="true" 
-                        data-width="100%" title="Dönem Seçiniz" @onchange="OnReportPeriodChanged">
-                    <option value="">Tüm Dönemler</option>
-                    @foreach (var period in _academicYears)
-                    {
-                        <option value="@period" selected="@(_selectedReportPeriod == period)">@period</option>
-                    }
-                </select>
-            </div>
-        </MudItem>
-        <MudItem xs="12" md="8" Style="display: flex; align-items: center; justify-content: flex-end;">
-            <MudButton Class="pdf-btn"
-                       StartIcon="@Icons.Material.Filled.PictureAsPdf" 
-                       OnClick="GeneratePdfReport"
-                       Size="Size.Large">
-                PDF Raporu Al
-            </MudButton>
-        </MudItem>
-    </MudGrid>
+    <!-- Action Toolbar: Dönem Filtresi ve PDF Butonu -->
+    <MudPaper Elevation="1" Class="pa-4 mb-4" Style="border-radius: 12px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div style="max-width: 350px; min-width: 250px;">
+                    <label class="form-label" style="font-weight: 600; color: var(--color-gray-700); margin-bottom: 8px;">Dönem Filtresi</label>
+                    <select id="report-period-filter" class="selectpicker" data-live-search="true" 
+                            data-width="100%" title="Dönem Seçiniz" @onchange="OnReportPeriodChanged">
+                        <option value="">Tüm Dönemler</option>
+                        @foreach (var period in _academicYears)
+                        {
+                            <option value="@period" selected="@(_selectedReportPeriod == period)">@period</option>
+                        }
+                    </select>
+                </div>
+                <div style="margin-left: auto;">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.PictureAsPdf" 
+                               OnClick="GeneratePdfReport"
+                               Size="Size.Large"
+                               Style="border-radius: 12px; padding: 12px 24px;">
+                        PDF Raporu Al
+                    </MudButton>
+                </div>
+            </MudPaper>
 
-    <!-- Genel İstatistikler - Modern Card Design - Gruplu Düzen -->
-    <MudGrid Class="mb-4" Spacing="3">
+            <!-- Genel İstatistikler - Modern Card Design - Gruplu Düzen -->
+            <MudGrid Spacing="3" Class="section-gap">
         <!-- Row 1: Dönem (Orange) + Öğrenci Grubu (Purple) -->
         <MudItem xs="6" md="3">
             <div class="stat-card stat-card-orange">
@@ -199,7 +251,7 @@ else
                     <MudIcon Icon="@Icons.Material.Filled.Payments" Style="font-size: 24px;" />
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">Burs Tutarı</div>
+                    <div class="stat-label">Taahhüt Edilen Burs Tutarı</div>
                     <div class="stat-value">@_stats.PeriodBursTutari.ToString("N0") ₺</div>
                 </div>
             </div>
@@ -232,8 +284,8 @@ else
                     <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Style="font-size: 24px;" />
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">Toplam Burs</div>
-                    <div class="stat-value">@_stats.PeriodBursTutari.ToString("N0") ₺</div>
+                    <div class="stat-label">Toplam Ödenen Burs</div>
+                    <div class="stat-value">@_stats.TotalPaidScholarship.ToString("N0") ₺</div>
                 </div>
             </div>
         </MudItem>
@@ -299,7 +351,7 @@ else
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudText Typo="Typo.subtitle1" Style="font-weight: 600; color: #374151;">
-                            Cinsiyet Bazlı Üye Dağılımı
+                            Cinsiyet Bazlı Öğrenci Dağılımı
                         </MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
@@ -309,12 +361,13 @@ else
                         <MudChart ChartType="ChartType.Donut" 
                                   InputData="@_genderChartData" 
                                   InputLabels="@_genderLabels"
-                                  Width="300px" Height="300px" />
+                                  Width="300px" Height="300px"
+                                  ChartOptions="@_genderChartOptions" />
                         <MudStack Row="true" Justify="Justify.Center" Class="mt-2">
                             @for (int i = 0; i < _genderLabels.Length; i++)
                             {
                                 var idx = i;
-                                <MudChip T="string" Color="@(idx == 0 ? Color.Primary : Color.Secondary)" Size="Size.Small">
+                                <MudChip T="string" Style="@GetGenderChipStyle(_genderLabels[idx])" Size="Size.Small">
                                     @_genderLabels[idx]: @_genderChartData[idx].ToString("F0")
                                 </MudChip>
                             }
@@ -338,16 +391,23 @@ else
                         </MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
-                <MudCardContent Style="overflow: hidden;">
+                <MudCardContent>
                     @if (_locationChartData.Any())
                     {
-                        <div class="chart-container">
-                            <MudChart ChartType="ChartType.Bar" 
-                                      ChartSeries="@(new List<ChartSeries> { new ChartSeries { Name = "Öğrenci", Data = _locationChartData } })" 
-                                      XAxisLabels="@_locationLabels"
-                                      Width="100%" Height="220px" 
-                                      ChartOptions="@(new ChartOptions { ChartPalette = new[] { "#8b5cf6", "#f59e0b" } })" />
-                        </div>
+                        <MudChart ChartType="ChartType.Donut" 
+                                  InputData="@_locationChartData" 
+                                  InputLabels="@_locationLabels"
+                                  Width="300px" Height="300px"
+                                  ChartOptions="@(new ChartOptions { ChartPalette = new[] { "#f59e0b", "#ef4444" } })" />
+                        <MudStack Row="true" Justify="Justify.Center" Class="mt-2">
+                            @for (int i = 0; i < _locationLabels.Length; i++)
+                            {
+                                var idx = i;
+                                <MudChip T="string" Style="@(idx == 0 ? "background-color: #f59e0b; color: white;" : "background-color: #ef4444; color: white;")" Size="Size.Small">
+                                    @_locationLabels[idx]: @_locationChartData[idx].ToString("F0")
+                                </MudChip>
+                            }
+                        </MudStack>
                     }
                     else
                     {
@@ -369,7 +429,7 @@ else
                 <MudCardContent>
                     @if (_memberScholarshipDetails.Any())
                     {
-                        <MudTable Items="@_memberScholarshipDetails.Take(5)" Dense="true" Hover="true" Elevation="0">
+                        <MudTable Items="@_memberScholarshipDetails.Take(10)" Dense="true" Hover="true" Elevation="0">
                             <HeaderContent>
                                 <MudTh>Üye</MudTh>
                                 <MudTh>Taahhüt</MudTh>
@@ -400,15 +460,22 @@ else
                         </MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
-                <MudCardContent Style="overflow: hidden;">
-                    @if (_universityChartSeries.Any())
+                <MudCardContent Style="overflow: hidden; max-height: 500px; overflow-y: auto;">
+                    @if (_universityData.Any())
                     {
-                        <div class="chart-container">
-                            <MudChart ChartType="ChartType.Bar" 
-                                      ChartSeries="@_universityChartSeries" 
-                                      XAxisLabels="@_universityChartLabels"
-                                      Width="100%" Height="280px"
-                                      ChartOptions="@(new ChartOptions { ChartPalette = new[] { "#8b5cf6", "#f59e0b", "#3b82f6", "#ec4899" } })" />
+                        <div class="horizontal-bar-chart">
+                            @{ var maxValue = _universityData.Values.Max(); }
+                            @foreach (var uni in _universityData.OrderByDescending(u => u.Value))
+                            {
+                                var percentage = maxValue > 0 ? (uni.Value * 100.0 / maxValue) : 0;
+                                <div class="horizontal-bar-row">
+                                    <div class="horizontal-bar-label" title="@uni.Key">@uni.Key</div>
+                                    <div class="horizontal-bar-container">
+                                        <div class="horizontal-bar-fill" style="width: @(percentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%; background: linear-gradient(90deg, #8b5cf6, #a78bfa);"></div>
+                                        <span class="horizontal-bar-value">@uni.Value</span>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     }
                     else
@@ -514,6 +581,7 @@ else
     // Chart data for gender distribution
     private double[] _genderChartData = Array.Empty<double>();
     private string[] _genderLabels = Array.Empty<string>();
+    private ChartOptions _genderChartOptions = new ChartOptions();
     
     // Chart data for location distribution
     private double[] _locationChartData = Array.Empty<double>();
@@ -529,8 +597,8 @@ else
         var periodsFromSettings = await SettingsService.GetListValueAsync("AcademicPeriods");
         if (periodsFromSettings.Count > 0)
         {
-            // 2025-2026 başta olacak şekilde sırala
-            _academicYears = periodsFromSettings.OrderBy(p => p != "2025-2026").ThenByDescending(p => p).ToList();
+            // Küçükten büyüğe sırala
+            _academicYears = periodsFromSettings.OrderBy(p => p).ToList();
         }
         else
         {
@@ -540,7 +608,7 @@ else
             {
                 defaultPeriods.Add($"{startYear}-{startYear + 1}");
             }
-            _academicYears = defaultPeriods.OrderBy(p => p != "2025-2026").ThenByDescending(p => p).ToList();
+            _academicYears = defaultPeriods.OrderBy(p => p).ToList();
         }
         
         await RefreshReportsAsync();
@@ -589,8 +657,8 @@ else
             var allStudents = await StudentService.GetAllAsync();
             var activeStudents = allStudents.Where(s => s.AktifBursMu).ToList();
             
-            // Update basic student stats
-            _stats.TotalStudents = allStudents.Count;
+            // Update basic student stats - Toplam Öğrenci = only non-graduated students (Öğrenciler)
+            _stats.TotalStudents = allStudents.Count(s => !s.MezunMu);
             _stats.ActiveScholarships = activeStudents.Count;
             _stats.GraduatedCount = await StudentService.GetGraduatedCountAsync();
 
@@ -608,11 +676,35 @@ else
             _stats.PledgedCount = filteredCommitments.Sum(c => c.PledgedCount);
             _stats.RealizedCount = filteredCommitments.Sum(c => c.GivenCount);
             
-            // Calculate period scholarship amount from filtered commitments
-            _stats.PeriodBursTutari = filteredCommitments.Sum(c => c.YearlyAmountPerScholarship * c.PledgedCount);
+            // Get global yearly amount from settings (monthly * 8 months)
+            var scholarshipAmounts = await SettingsService.GetScholarshipAmountsAsync();
+            decimal globalYearlyAmount = 25000m; // Default fallback (3125 * 8)
             
-            // Calculate realized total amount (yearlyAmountPerScholarship * realized count)
-            _stats.RealizedTotalAmount = filteredCommitments.Sum(c => c.YearlyAmountPerScholarship * c.GivenCount);
+            if (!string.IsNullOrWhiteSpace(_selectedReportPeriod) && scholarshipAmounts.Any())
+            {
+                var periodAmount = scholarshipAmounts.FirstOrDefault(s => s.Period == _selectedReportPeriod);
+                if (periodAmount != null)
+                {
+                    globalYearlyAmount = periodAmount.Amount * 8; // Monthly to Yearly
+                }
+            }
+            else if (scholarshipAmounts.Any())
+            {
+                var latestAmount = scholarshipAmounts.OrderByDescending(s => s.Period).FirstOrDefault();
+                if (latestAmount != null)
+                {
+                    globalYearlyAmount = latestAmount.Amount * 8;
+                }
+            }
+            
+            // Calculate period scholarship amount: PledgedCount * GlobalYearlyAmount (clean integer result)
+            _stats.PeriodBursTutari = _stats.PledgedCount * globalYearlyAmount;
+            
+            // Calculate realized total amount: RealizedCount * GlobalYearlyAmount
+            _stats.RealizedTotalAmount = _stats.RealizedCount * globalYearlyAmount;
+
+            // Calculate Total Paid Scholarship: (Count of Paid Months up to current date) * (Global Monthly Amount * 0.8)
+            await CalculateTotalPaidScholarshipAsync();
 
             // Members and donors
             _stats.TotalMembers = await MemberService.GetTotalCountAsync();
@@ -628,12 +720,8 @@ else
             
             _stats.TotalAidsCount = filteredAids.Count;
             
-            // Calculate unique village count (only from İzollulu aids)
-            _stats.VillageCount = filteredAids
-                .Where(a => a.IsIzollulu && !string.IsNullOrWhiteSpace(a.Koy))
-                .Select(a => a.Koy)
-                .Distinct()
-                .Count();
+            // Get total village count from Villages table
+            _stats.VillageCount = await VillageService.GetTotalCountAsync();
 
             // Update charts/tables with filtered commitments and aids
             await LoadChartsAndTablesAsync(allStudents, filteredCommitments, filteredAids);
@@ -648,22 +736,110 @@ else
         }
     }
 
+    private async Task CalculateTotalPaidScholarshipAsync()
+    {
+        try
+        {
+            // Step 1: Get Total Active Students (non-graduated students with active scholarship)
+            var allStudents = await StudentService.GetAllAsync();
+            int totalActiveStudents = allStudents.Count(s => !s.MezunMu && s.AktifBursMu);
+            
+            // Step 2: Get Global Monthly Amount from settings
+            var scholarshipAmounts = await SettingsService.GetScholarshipAmountsAsync();
+            decimal globalMonthlyAmount = 3125m; // Default fallback
+            
+            if (!string.IsNullOrWhiteSpace(_selectedReportPeriod) && scholarshipAmounts.Any())
+            {
+                var periodAmount = scholarshipAmounts.FirstOrDefault(s => s.Period == _selectedReportPeriod);
+                if (periodAmount != null)
+                {
+                    globalMonthlyAmount = periodAmount.Amount;
+                }
+            }
+            else if (scholarshipAmounts.Any())
+            {
+                var latestAmount = scholarshipAmounts.OrderByDescending(s => s.Period).FirstOrDefault();
+                if (latestAmount != null)
+                {
+                    globalMonthlyAmount = latestAmount.Amount;
+                }
+            }
+            
+            // Step 3: Calculate Monthly Payment Per Student = Global Monthly Amount * 0.80
+            decimal monthlyPaymentPerStudent = globalMonthlyAmount * 0.8m;
+            
+            // Step 4: Determine Elapsed Months (October to current month)
+            // Academic year starts in October (month 10)
+            var now = DateTime.Now;
+            int elapsedMonths = 0;
+            
+            // Calculate months from October to current month
+            // Oct=1, Nov=2, Dec=3, Jan=4, Feb=5, Mar=6, Apr=7, May=8
+            if (now.Month >= 10) // Oct, Nov, Dec (same year)
+            {
+                elapsedMonths = now.Month - 9; // Oct=1, Nov=2, Dec=3
+            }
+            else if (now.Month >= 1 && now.Month <= 5) // Jan-May (next year)
+            {
+                elapsedMonths = 3 + now.Month; // Jan=4, Feb=5, Mar=6, Apr=7, May=8
+            }
+            
+            // Step 5: Final Formula: Total Paid = TotalStudents * MonthlyPaymentPerStudent * ElapsedMonths
+            _stats.TotalPaidScholarship = totalActiveStudents * monthlyPaymentPerStudent * elapsedMonths;
+        }
+        catch (Exception ex)
+        {
+            _stats.TotalPaidScholarship = 0;
+            Console.WriteLine($"Error calculating total paid scholarship: {ex.Message}");
+        }
+    }
+
     private async Task LoadChartsAndTablesAsync(List<Student> students, List<MemberScholarshipCommitment> commitments, List<Aid> aids)
     {
-        // Gender distribution for charts
+        // Gender distribution for charts - order: Kadın (pink), Erkek (blue), others
+        // Only show active students (not graduates)
         var genderGroups = students
+            .Where(s => !s.MezunMu)
             .GroupBy(s => string.IsNullOrEmpty(s.Cinsiyet) ? "Belirtilmemiş" : s.Cinsiyet)
             .ToDictionary(g => g.Key, g => g.Count());
         
         if (genderGroups.Any())
         {
-            _genderLabels = genderGroups.Keys.ToArray();
-            _genderChartData = genderGroups.Values.Select(v => (double)v).ToArray();
+            // Build ordered lists with Kadın first, then Erkek, then others
+            var orderedLabels = new List<string>();
+            var orderedData = new List<double>();
+            var orderedColors = new List<string>();
+            
+            if (genderGroups.ContainsKey("Kadın"))
+            {
+                orderedLabels.Add("Kadın");
+                orderedData.Add(genderGroups["Kadın"]);
+                orderedColors.Add("#ec4899"); // Pink
+            }
+            if (genderGroups.ContainsKey("Erkek"))
+            {
+                orderedLabels.Add("Erkek");
+                orderedData.Add(genderGroups["Erkek"]);
+                orderedColors.Add("#3b82f6"); // Blue
+            }
+            foreach (var kvp in genderGroups.Where(g => g.Key != "Kadın" && g.Key != "Erkek"))
+            {
+                orderedLabels.Add(kvp.Key);
+                orderedData.Add(kvp.Value);
+                orderedColors.Add("#9ca3af"); // Gray for others
+            }
+            
+            _genderLabels = orderedLabels.ToArray();
+            _genderChartData = orderedData.ToArray();
+            _genderChartOptions = new ChartOptions { ChartPalette = orderedColors.ToArray() };
         }
         
         // Location distribution (Malatya içi/dışı)
+        // Only show active students (not graduates)
         var locationGroups = students
+            .Where(s => !s.MezunMu)
             .GroupBy(s => s.IsMalatyaUniversity ? "Malatya İçi" : "Malatya Dışı")
+            .OrderBy(g => g.Key == "Malatya İçi" ? 0 : 1) // Ensure "Malatya İçi" is always first
             .ToDictionary(g => g.Key, g => g.Count());
         
         if (locationGroups.Any())
@@ -814,6 +990,7 @@ else
         public int TotalAidsCount { get; set; }
         public int VillageCount { get; set; }
         public decimal RealizedTotalAmount { get; set; }
+        public decimal TotalPaidScholarship { get; set; } // New: Dynamically calculated total paid
     }
 
     private class RoleBasedScholarship
@@ -831,13 +1008,16 @@ else
             // Get all students for distribution calculations
             var allStudents = await StudentService.GetAllAsync();
             
-            // Calculate gender distribution
-            var genderDistribution = allStudents
+            // Filter to active students only (exclude graduates) - same as dashboard
+            var activeStudents = allStudents.Where(s => !s.MezunMu).ToList();
+            
+            // Calculate gender distribution (active students only)
+            var genderDistribution = activeStudents
                 .GroupBy(s => string.IsNullOrEmpty(s.Cinsiyet) ? "Belirtilmemiş" : s.Cinsiyet)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            // Calculate Malatya location distribution
-            var malatyaLocationDistribution = allStudents
+            // Calculate Malatya location distribution (active students only)
+            var malatyaLocationDistribution = activeStudents
                 .GroupBy(s => s.IsMalatyaUniversity ? "Malatya İçi" : "Malatya Dışı")
                 .ToDictionary(g => g.Key, g => g.Count());
 
@@ -859,7 +1039,7 @@ else
                 graduatedCount: _stats.GraduatedCount,
                 totalDonors: _stats.TotalDonors,
                 totalMembers: _stats.TotalMembers,
-                totalAmount: _stats.TotalAmount,
+                totalPaidScholarship: _stats.TotalPaidScholarship,  // Changed from TotalAmount to match Dashboard
                 activePeriod: _stats.ActivePeriod,
                 periodBursTutari: _stats.PeriodBursTutari,
                 pledgedCount: _stats.PledgedCount,
@@ -890,4 +1070,16 @@ else
             Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
         }
     }
+    
+    private string GetGenderChipStyle(string gender)
+    {
+        return gender switch
+        {
+            "Kadın" => "background-color: #ec4899; color: white;",
+            "Erkek" => "background-color: #3b82f6; color: white;",
+            _ => "background-color: #9ca3af; color: white;"
+        };
+    }
 }
+
+</MudContainer>

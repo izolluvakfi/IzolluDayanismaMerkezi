@@ -12,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Configure Turkish culture for dd/MM/yyyy date format
 var cultureInfo = new CultureInfo("tr-TR");
 cultureInfo.DateTimeFormat.ShortDatePattern = "dd/MM/yyyy";
+// SVG ve chart componentleri için ondalık ayırıcı nokta olmalı
+cultureInfo.NumberFormat.NumberDecimalSeparator = ".";
+cultureInfo.NumberFormat.CurrencyDecimalSeparator = ".";
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
@@ -21,6 +24,10 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.ListenAnyIP(5000); // HTTP
     // Uncomment for HTTPS: serverOptions.ListenAnyIP(5001, listenOptions => { listenOptions.UseHttps(); });
 });
+
+// Enable static web assets (for MudBlazor and other RCL packages)
+// Enabled unconditionally to ensure _content/* paths work from any domain
+builder.WebHost.UseStaticWebAssets();
 
 // Configure QuestPDF License
 QuestPDF.Settings.License = LicenseType.Community;
@@ -48,6 +55,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Add Application Services
 builder.Services.AddScoped<ActivityLogService>();
+builder.Services.AddScoped<StudentScholarshipStatusService>(); // Must be before MeetingService and TranscriptService
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<DonorService>();
 builder.Services.AddScoped<MemberService>();
@@ -67,6 +75,9 @@ builder.Services.AddScoped<TermReportService>();
 // Add Singleton Services
 builder.Services.AddSingleton<TermChangeNotifier>(); // Cross-component event notifications
 builder.Services.AddSingleton<AuthService>(); // Authentication service
+
+// Add Background Jobs
+builder.Services.AddHostedService<GradePromotionBackgroundJob>(); // Automatic grade promotion on August 1st
 
 var app = builder.Build();
 

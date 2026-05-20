@@ -202,6 +202,9 @@ namespace IzolluVakfi.Migrations
                     b.Property<DateTime>("Tarih")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("TermId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ToplantiNotlari")
                         .HasColumnType("TEXT");
 
@@ -211,6 +214,8 @@ namespace IzolluVakfi.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TermId");
 
                     b.ToTable("Meetings");
                 });
@@ -569,6 +574,9 @@ namespace IzolluVakfi.Migrations
                     b.Property<bool>("IsMalatyaUniversity")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsMaxGradeReached")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Koy")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -670,6 +678,55 @@ namespace IzolluVakfi.Migrations
                         .IsUnique();
 
                     b.ToTable("StudentMeetingAttendances");
+                });
+
+            modelBuilder.Entity("IzolluVakfi.Data.Entities.StudentScholarshipStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CutReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TermId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TermId");
+
+                    b.HasIndex("StudentId", "TermId", "Month", "Year")
+                        .IsUnique()
+                        .HasDatabaseName("IX_StudentScholarshipStatus_Unique");
+
+                    b.ToTable("StudentScholarshipStatuses");
                 });
 
             modelBuilder.Entity("IzolluVakfi.Data.Entities.SystemSettings", b =>
@@ -843,6 +900,15 @@ namespace IzolluVakfi.Migrations
                     b.ToTable("Villages");
                 });
 
+            modelBuilder.Entity("IzolluVakfi.Data.Entities.Meeting", b =>
+                {
+                    b.HasOne("IzolluVakfi.Data.Entities.Term", "Term")
+                        .WithMany()
+                        .HasForeignKey("TermId");
+
+                    b.Navigation("Term");
+                });
+
             modelBuilder.Entity("IzolluVakfi.Data.Entities.MemberMeetingAttendance", b =>
                 {
                     b.HasOne("IzolluVakfi.Data.Entities.Meeting", "Meeting")
@@ -913,6 +979,25 @@ namespace IzolluVakfi.Migrations
                     b.Navigation("Meeting");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("IzolluVakfi.Data.Entities.StudentScholarshipStatus", b =>
+                {
+                    b.HasOne("IzolluVakfi.Data.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IzolluVakfi.Data.Entities.Term", "Term")
+                        .WithMany()
+                        .HasForeignKey("TermId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+
+                    b.Navigation("Term");
                 });
 
             modelBuilder.Entity("IzolluVakfi.Data.Entities.TermScholarshipConfig", b =>

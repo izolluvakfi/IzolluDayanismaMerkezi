@@ -113,7 +113,7 @@ public class ExcelService
             worksheet.Cell(row, 4).Value = student.Telefon ?? "";
             worksheet.Cell(row, 5).Value = student.DogumTarihi?.ToString("dd.MM.yyyy") ?? "";
             worksheet.Cell(row, 6).Value = student.Yas?.ToString() ?? "";
-            worksheet.Cell(row, 7).Value = student.Cinsiyet ?? "";
+            worksheet.Cell(row, 7).Value = FormatGender(student.Cinsiyet);
             worksheet.Cell(row, 8).Value = student.Koy ?? "";
             worksheet.Cell(row, 9).Value = student.EbeveynAdi ?? "";
             worksheet.Cell(row, 10).Value = student.EbeveynTelefon ?? "";
@@ -480,5 +480,212 @@ public class ExcelService
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
         return stream.ToArray();
+    }
+
+    // ========== MEZUN ÖĞRENCİ METODLARI ==========
+
+    public byte[] GenerateGraduatedStudentTemplate()
+    {
+        using var workbook = new XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Mezun Öğrenciler");
+
+        // Başlıklar
+        var headers = new[]
+        {
+            "Sicil Numarası", "Ad Soyad", "TC No", "Email", "Telefon", "Cinsiyet", "Doğum Tarihi",
+            "Köy", "Adres", "Üniversite", "Bölüm", "Meslek", "Firma",
+            "Mezuniyet Tarihi", "İzollulu", "Notlar"
+        };
+
+        for (int i = 0; i < headers.Length; i++)
+        {
+            worksheet.Cell(1, i + 1).Value = headers[i];
+            worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+            worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightGreen;
+        }
+
+        // Örnek satır 1
+        worksheet.Cell(2, 1).Value = "20001";  // Öğrenci sicil formatı: 2XXXX
+        worksheet.Cell(2, 2).Value = "Ayşe Yılmaz";
+        worksheet.Cell(2, 3).Value = "12345678901";
+        worksheet.Cell(2, 4).Value = "ayse.yilmaz@email.com";
+        worksheet.Cell(2, 5).Value = "0532 123 4567";
+        worksheet.Cell(2, 6).Value = "Kadın";
+        worksheet.Cell(2, 7).Value = "15.05.1998";
+        worksheet.Cell(2, 8).Value = "Gözeli";
+        worksheet.Cell(2, 9).Value = "Çankaya, Ankara";
+        worksheet.Cell(2, 10).Value = "Fırat Üniversitesi";
+        worksheet.Cell(2, 11).Value = "Bilgisayar Mühendisliği";
+        worksheet.Cell(2, 12).Value = "Yazılım Geliştirici";
+        worksheet.Cell(2, 13).Value = "ABC Teknoloji A.Ş.";
+        worksheet.Cell(2, 14).Value = "01.07.2023";
+        worksheet.Cell(2, 15).Value = "Evet";
+        worksheet.Cell(2, 16).Value = "2019 yılından itibaren burs aldı";
+
+        // Örnek satır 2
+        worksheet.Cell(3, 1).Value = "20002";
+        worksheet.Cell(3, 2).Value = "Mehmet Kaya";
+        worksheet.Cell(3, 3).Value = "98765432109";
+        worksheet.Cell(3, 4).Value = "mehmet.kaya@email.com";
+        worksheet.Cell(3, 5).Value = "0533 456 7890";
+        worksheet.Cell(3, 6).Value = "Erkek";
+        worksheet.Cell(3, 7).Value = "22.11.1995";
+        worksheet.Cell(3, 8).Value = "İzollu";
+        worksheet.Cell(3, 9).Value = "Kadıköy, İstanbul";
+        worksheet.Cell(3, 10).Value = "İnönü Üniversitesi";
+        worksheet.Cell(3, 11).Value = "Tıp Fakültesi";
+        worksheet.Cell(3, 12).Value = "Doktor";
+        worksheet.Cell(3, 13).Value = "Devlet Hastanesi";
+        worksheet.Cell(3, 14).Value = "15.06.2022";
+        worksheet.Cell(3, 15).Value = "Evet";
+        worksheet.Cell(3, 16).Value = "";
+
+        // Açıklama satırları
+        worksheet.Cell(5, 1).Value = "NOT:";
+        worksheet.Cell(5, 1).Style.Font.Bold = true;
+        worksheet.Cell(5, 2).Value = "Sicil numarası 2 ile başlamalıdır (örn: 20001, 20002). Boş bırakılırsa otomatik atanır.";
+        worksheet.Cell(6, 2).Value = "Cinsiyet: Erkek veya Kadın";
+        worksheet.Cell(7, 2).Value = "Tarih formatı: GG.AA.YYYY (örn: 15.05.1998)";
+        worksheet.Cell(8, 2).Value = "İzollulu: Evet veya Hayır";
+
+        worksheet.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
+    }
+
+    public byte[] ExportGraduatedStudents(List<Student> students)
+    {
+        using var workbook = new XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Mezun Öğrenciler");
+
+        // Başlıklar
+        var headers = new[]
+        {
+            "Sicil Numarası", "Ad Soyad", "TC No", "Email", "Telefon", "Cinsiyet", "Doğum Tarihi", "Yaş",
+            "Köy", "Adres", "Üniversite", "Bölüm", "Meslek", "Firma",
+            "Mezuniyet Tarihi", "İzollulu", "Notlar"
+        };
+
+        for (int i = 0; i < headers.Length; i++)
+        {
+            worksheet.Cell(1, i + 1).Value = headers[i];
+            worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+            worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightGreen;
+        }
+
+        // Veri satırları
+        for (int i = 0; i < students.Count; i++)
+        {
+            var student = students[i];
+            int row = i + 2;
+
+            worksheet.Cell(row, 1).Value = student.SicilNumarasi ?? "";
+            worksheet.Cell(row, 2).Value = student.AdSoyad;
+            worksheet.Cell(row, 3).Value = student.TCNo ?? "";
+            worksheet.Cell(row, 4).Value = student.Email ?? "";
+            worksheet.Cell(row, 5).Value = student.Telefon ?? "";
+            worksheet.Cell(row, 6).Value = FormatGender(student.Cinsiyet);
+            worksheet.Cell(row, 7).Value = student.DogumTarihi?.ToString("dd.MM.yyyy") ?? "";
+            worksheet.Cell(row, 8).Value = student.Yas?.ToString() ?? "";
+            worksheet.Cell(row, 9).Value = student.Koy ?? "";
+            worksheet.Cell(row, 10).Value = student.Adres ?? "";
+            worksheet.Cell(row, 11).Value = student.Universite ?? "";
+            worksheet.Cell(row, 12).Value = student.Bolum ?? "";
+            worksheet.Cell(row, 13).Value = student.Meslek ?? "";
+            worksheet.Cell(row, 14).Value = student.Firma ?? "";
+            worksheet.Cell(row, 15).Value = student.MezuniyetTarihi?.ToString("dd.MM.yyyy") ?? "";
+            worksheet.Cell(row, 16).Value = student.IsIzollulu ? "Evet" : "Hayır";
+            worksheet.Cell(row, 17).Value = student.Notlar ?? "";
+        }
+
+        worksheet.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
+    }
+
+    public List<Student> ImportGraduatedStudents(Stream fileStream)
+    {
+        var students = new List<Student>();
+
+        using var workbook = new XLWorkbook(fileStream);
+        var worksheet = workbook.Worksheet(1);
+
+        // Başlık kontrolü
+        var expectedHeaders = new[]
+        {
+            "Sicil Numarası", "Ad Soyad", "TC No", "Email", "Telefon", "Cinsiyet", "Doğum Tarihi",
+            "Köy", "Adres", "Üniversite", "Bölüm", "Meslek", "Firma",
+            "Mezuniyet Tarihi", "İzollulu", "Notlar"
+        };
+
+        for (int i = 0; i < expectedHeaders.Length; i++)
+        {
+            var cellValue = worksheet.Cell(1, i + 1).GetString();
+            if (cellValue != expectedHeaders[i])
+            {
+                throw new Exception($"Hatalı başlık: '{cellValue}'. Beklenen: '{expectedHeaders[i]}'");
+            }
+        }
+
+        // Veri okuma (2. satırdan başla, 1. satır başlık)
+        var rows = worksheet.RowsUsed().Skip(1);
+
+        foreach (var row in rows)
+        {
+            try
+            {
+                var adSoyad = row.Cell(2).GetString();
+                if (string.IsNullOrWhiteSpace(adSoyad)) continue; // Boş satırları atla
+
+                var student = new Student
+                {
+                    SicilNumarasi = row.Cell(1).GetString(),
+                    AdSoyad = adSoyad,
+                    TCNo = row.Cell(3).GetString(),
+                    Email = row.Cell(4).GetString(),
+                    Telefon = row.Cell(5).GetString(),
+                    Cinsiyet = row.Cell(6).GetString(),
+                    DogumTarihi = ParseDate(row.Cell(7).GetString()),
+                    Koy = row.Cell(8).GetString(),
+                    Adres = row.Cell(9).GetString(),
+                    Universite = row.Cell(10).GetString(),
+                    Bolum = row.Cell(11).GetString(),
+                    Meslek = row.Cell(12).GetString(),
+                    Firma = row.Cell(13).GetString(),
+                    MezuniyetTarihi = ParseDate(row.Cell(14).GetString()),
+                    IsIzollulu = row.Cell(15).GetString()?.ToLower() == "evet",
+                    Notlar = row.Cell(16).GetString(),
+                    MezunMu = true,
+                    AktifBursMu = false,
+                    OlusturmaTarihi = DateTime.Now
+                };
+
+                students.Add(student);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Satır {row.RowNumber()} işlenirken hata: {ex.Message}");
+            }
+        }
+
+        return students;
+    }
+
+    private static string FormatGender(string? cinsiyet)
+    {
+        if (string.IsNullOrEmpty(cinsiyet))
+            return "";
+        
+        var lower = cinsiyet.ToLower();
+        if (lower == "erkek")
+            return "Erkek";
+        if (lower == "kadın" || lower == "kadin")
+            return "Kadın";
+        
+        return cinsiyet;
     }
 }

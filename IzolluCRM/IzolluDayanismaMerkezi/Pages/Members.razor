@@ -806,7 +806,7 @@
                     _allPeriods.Add($"{year}-{year + 1}");
                 }
             }
-            _allPeriods = _allPeriods.OrderByDescending(p => p).ToList();
+            _allPeriods = _allPeriods.OrderBy(p => p).ToList();
         }
         catch
         {

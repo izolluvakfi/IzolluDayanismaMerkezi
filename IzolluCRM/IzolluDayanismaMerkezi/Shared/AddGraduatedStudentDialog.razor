@@ -1,0 +1,317 @@
+@inject StudentService StudentService
+@inject SettingsService SettingsService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudDialog Style="max-width: 800px;">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.School" Class="mr-2" Style="vertical-align: middle;" />
+            Yeni Mezun Öğrenci Ekle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="@_success">
+            @* Kişisel Bilgiler *@
+            <MudPaper Elevation="0" Class="pa-3 mb-3" Style="background-color: #ddd6fe; border-radius: 12px; border-left: 4px solid #8b5cf6;">
+                <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Class="mr-1" />
+                    Kişisel Bilgiler
+                </MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_student.AdSoyad" Label="Ad Soyad" Required="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_student.TCNo" Label="TC No" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="11" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <div class="form-group">
+                            <label class="form-label">Cinsiyet</label>
+                            <select class="selectpicker form-control" data-live-search="false" data-width="100%" 
+                                    @onchange="@(e => _student.Cinsiyet = e.Value?.ToString())">
+                                <option value="">Seçiniz</option>
+                                @foreach (var gender in _genderOptions)
+                                {
+                                    <option value="@gender" selected="@(_student.Cinsiyet == gender)">@gender</option>
+                                }
+                            </select>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <div class="form-group">
+                            <label class="form-label">Doğum Tarihi</label>
+                            <input type="date" class="form-control" 
+                                   value="@(_dogumTarihi?.ToString("yyyy-MM-dd"))"
+                                   @onchange="@(e => _dogumTarihi = DateTime.TryParse(e.Value?.ToString(), out var dt) ? dt : null)" />
+                        </div>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            @* İletişim Bilgileri *@
+            <MudPaper Elevation="0" Class="pa-3 mb-3" Style="background-color: #d1fae5; border-radius: 12px; border-left: 4px solid #22c55e;">
+                <MudText Typo="Typo.subtitle2" Color="Color.Success" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.ContactPhone" Size="Size.Small" Class="mr-1" />
+                    İletişim Bilgileri
+                </MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_student.Telefon" Label="Telefon" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_student.Email" Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" InputType="InputType.Email" />
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            @* Adres Bilgileri *@
+            <MudPaper Elevation="0" Class="pa-3 mb-3" Style="background-color: #fed7aa; border-radius: 12px; border-left: 4px solid #f59e0b;">
+                <MudText Typo="Typo.subtitle2" Style="color: #b45309;" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
+                    Adres Bilgileri
+                </MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="4">
+                        <MudCheckBox T="bool" Value="_student.IsIzollulu" ValueChanged="OnIsIzolluluChanged" Label="İzollulu mu?" Color="Color.Secondary" />
+                    </MudItem>
+                    <MudItem xs="12" md="8">
+                        @if (_student.IsIzollulu)
+                        {
+                            <div class="form-group">
+                                <label class="form-label">Köy</label>
+                                <select class="selectpicker form-control" data-live-search="true" data-width="100%"
+                                        @onchange="@(e => _student.Koy = e.Value?.ToString())">
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var village in _izolluVillages)
+                                    {
+                                        <option value="@village" selected="@(_student.Koy == village)">@village</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-group">
+                                <label class="form-label">İl</label>
+                                <select class="selectpicker form-control" data-live-search="true" data-width="100%"
+                                        @onchange="@(e => _student.Koy = e.Value?.ToString())">
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var province in _turkishProvinces)
+                                    {
+                                        <option value="@province" selected="@(_student.Koy == province)">@province</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_student.Adres" Label="Açık Adres" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" />
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            @* Eğitim Bilgileri *@
+            <MudPaper Elevation="0" Class="pa-3 mb-3" Style="background-color: #bfdbfe; border-radius: 12px; border-left: 4px solid #3b82f6;">
+                <MudText Typo="Typo.subtitle2" Color="Color.Info" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Class="mr-1" />
+                    Eğitim Bilgileri
+                </MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <div class="form-group">
+                            <label class="form-label">Üniversite</label>
+                            <select class="selectpicker form-control" data-live-search="true" data-width="100%"
+                                    @onchange="@(e => _student.Universite = e.Value?.ToString())">
+                                <option value="">Seçiniz</option>
+                                @foreach (var uni in _universities)
+                                {
+                                    <option value="@uni" selected="@(_student.Universite == uni)">@uni</option>
+                                }
+                            </select>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <div class="form-group">
+                            <label class="form-label">Bölüm</label>
+                            <select class="selectpicker form-control" data-live-search="true" data-width="100%"
+                                    @onchange="@(e => _student.Bolum = e.Value?.ToString())">
+                                <option value="">Seçiniz</option>
+                                @foreach (var bolum in _bolumler)
+                                {
+                                    <option value="@bolum" selected="@(_student.Bolum == bolum)">@bolum</option>
+                                }
+                            </select>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <div class="form-group">
+                            <label class="form-label">Mezuniyet Tarihi</label>
+                            <input type="date" class="form-control" 
+                                   value="@(_mezuniyetTarihi?.ToString("yyyy-MM-dd"))"
+                                   @onchange="@(e => _mezuniyetTarihi = DateTime.TryParse(e.Value?.ToString(), out var dt) ? dt : null)" />
+                        </div>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            @* Meslek Bilgileri *@
+            <MudPaper Elevation="0" Class="pa-3 mb-3" Style="background-color: #d1fae5; border-radius: 8px; border-left: 4px solid #10b981;">
+                <MudText Typo="Typo.subtitle2" Style="color: #059669;" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Small" Class="mr-1" />
+                    Meslek Bilgileri
+                </MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_student.Meslek" Label="Meslek" Placeholder="Örn: Yazılım Geliştirici, Doktor" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_student.Firma" Label="Çalıştığı Firma" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            @* Notlar *@
+            <MudPaper Elevation="0" Class="pa-3 mb-3" Style="background-color: #fed7aa; border-radius: 12px; border-left: 4px solid #f59e0b;">
+                <MudText Typo="Typo.subtitle2" Style="color: #b45309;" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Notes" Size="Size.Small" Class="mr-1" />
+                    Notlar
+                </MudText>
+                <MudTextField @bind-Value="_student.Notlar" 
+                              Label="Notlar" 
+                              Lines="3" 
+                              Variant="Variant.Outlined"
+                              Placeholder="Mezun öğrenci ile ilgili genel notları buraya yazabilirsiniz..." />
+            </MudPaper>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">İptal</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">
+            Kaydet
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm _form = null!;
+    private bool _success;
+    private Student _student = new()
+    {
+        MezunMu = true,
+        AktifBursMu = false,
+        OlusturmaTarihi = DateTime.Now
+    };
+    
+    private DateTime? _dogumTarihi;
+    private DateTime? _mezuniyetTarihi;
+    private List<string> _universities = new();
+    private List<string> _bolumler = new();
+    private readonly List<string> _genderOptions = new() { "Kadın", "Erkek" };
+
+    private readonly List<string> _izolluVillages = new()
+    {
+        "Abuşoğlu", "Akça", "Akuşağı", "Bağlıca", "Bentköy", "Çanakçı", "Darıpınar", "Dedeköy",
+        "Düztarla", "Erdemli", "Gülenköy", "Güneyce", "İkizpınar", "Kaleköy", "Karaağaç",
+        "Karahüseyin", "Kıyıcak", "Kozluk", "Kumluyazı", "Mahmut Dursun", "Salkımlı", "Sarıot",
+        "Soğukpınar", "Tepebaşı", "Uyanık", "Uzunhüseyin", "Üçdeğirmen", "Yenidamlar"
+    };
+
+    private readonly List<string> _turkishProvinces = new()
+    {
+        "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Aksaray", "Amasya", "Ankara", "Antalya",
+        "Ardahan", "Artvin", "Aydın", "Balıkesir", "Bartın", "Batman", "Bayburt", "Bilecik",
+        "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum",
+        "Denizli", "Diyarbakır", "Düzce", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir",
+        "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Iğdır", "Isparta", "İstanbul",
+        "İzmir", "Kahramanmaraş", "Karabük", "Karaman", "Kars", "Kastamonu", "Kayseri", "Kilis",
+        "Kırıkkale", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa",
+        "Mardin", "Mersin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Osmaniye",
+        "Rize", "Sakarya", "Samsun", "Şanlıurfa", "Siirt", "Sinop", "Şırnak", "Sivas",
+        "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Uşak", "Van", "Yalova", "Yozgat", "Zonguldak"
+    };
+
+    private async Task OnIsIzolluluChanged(bool value)
+    {
+        _student.IsIzollulu = value;
+        _student.Koy = null;
+        StateHasChanged();
+        await Task.Delay(50);
+        await InitializeSelectPickersAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _universities = await SettingsService.GetListValueAsync("Universiteler");
+        _bolumler = await SettingsService.GetListValueAsync("Bolumler");
+        
+        // Trigger a state update to ensure the UI reflects loaded data
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        await _form.Validate();
+        if (!_success)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_student.AdSoyad))
+        {
+            Snackbar.Add("Ad Soyad alanı zorunludur.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _student.DogumTarihi = _dogumTarihi;
+            _student.MezuniyetTarihi = _mezuniyetTarihi;
+            
+            // Yaş hesapla
+            if (_dogumTarihi.HasValue)
+            {
+                _student.Yas = DateTime.Now.Year - _dogumTarihi.Value.Year;
+                if (DateTime.Now.DayOfYear < _dogumTarihi.Value.DayOfYear)
+                    _student.Yas--;
+            }
+
+            await StudentService.CreateAsync(_student);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Wait a bit for data to be loaded and rendered
+            await Task.Delay(100);
+            await InitializeSelectPickersAsync();
+            
+            // Refresh again after initialization to ensure dropdowns are populated
+            await Task.Delay(100);
+            await InitializeSelectPickersAsync();
+        }
+    }
+
+    private async Task InitializeSelectPickersAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("bootstrapSelect.init");
+            // Force refresh to show loaded data
+            await JS.InvokeVoidAsync("eval", "$('.selectpicker').selectpicker('refresh')");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Bootstrap select initialization error: {ex.Message}");
+        }
+    }
+}

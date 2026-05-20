@@ -1,5 +1,6 @@
 @inject MeetingService MeetingService
 @inject SettingsService SettingsService
+@inject TermService TermService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
@@ -44,6 +45,19 @@
                                 @foreach (var loc in _locations)
                                 {
                                     <option value="@loc" selected="@(_meeting.Konum == loc)">@loc</option>
+                                }
+                            </select>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <div class="form-group">
+                            <label class="form-label">Dönem</label>
+                            <select class="selectpicker form-control" data-live-search="true" data-width="100%"
+                                    @onchange="@(e => _meeting.TermId = int.TryParse(e.Value?.ToString(), out var id) ? id : null)">
+                                <option value="">Dönem Seçiniz (Opsiyonel)</option>
+                                @foreach (var term in _terms)
+                                {
+                                    <option value="@term.Id" selected="@(_meeting.TermId == term.Id)">@term.DisplayName</option>
                                 }
                             </select>
                         </div>
@@ -122,6 +136,7 @@
     private string _bitisSaati = "20:00";
     private List<string> _meetingTypes = new();
     private List<string> _locations = new();
+    private List<Term> _terms = new();
 
     private readonly List<string> _timeOptions = new()
     {
@@ -152,6 +167,9 @@
         // Load meeting types and locations from settings
         _meetingTypes = await SettingsService.GetListValueAsync("MeetingTypes");
         _locations = await SettingsService.GetListValueAsync("MeetingLocations");
+        
+        // Load terms
+        _terms = await TermService.GetAllTermsAsync();
 
         // If empty, set defaults
         if (_meetingTypes == null || !_meetingTypes.Any())
@@ -177,7 +195,8 @@
                 Tarih = Meeting.Tarih,
                 BitisTarihi = Meeting.BitisTarihi,
                 Aciklama = Meeting.Aciklama,
-                OlusturmaTarihi = Meeting.OlusturmaTarihi
+                OlusturmaTarihi = Meeting.OlusturmaTarihi,
+                TermId = Meeting.TermId
             };
             _tarih = Meeting.Tarih.Date;
             _baslangicSaati = Meeting.Tarih.ToString("HH:mm");
@@ -185,10 +204,14 @@
         }
         else
         {
+            // Auto-select active term for new meetings
+            var activeTerm = _terms.FirstOrDefault(t => t.IsActive);
+            
             _meeting = new Meeting
             {
                 ToplantiTuru = _meetingTypes?.FirstOrDefault() ?? string.Empty,
-                Konum = _locations?.FirstOrDefault() ?? string.Empty
+                Konum = _locations?.FirstOrDefault() ?? string.Empty,
+                TermId = activeTerm?.Id
             };
             _tarih = DateTime.Today;
         }

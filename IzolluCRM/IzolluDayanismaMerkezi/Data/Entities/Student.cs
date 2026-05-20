@@ -98,6 +98,8 @@ public class Student
 
     public DateTime? ScholarshipCutDate { get; set; }
 
+    public bool IsMaxGradeReached { get; set; }
+
     // Navigation properties
     public virtual ICollection<TranscriptRecord> Transcripts { get; set; } = new List<TranscriptRecord>();
     public virtual ICollection<StudentMeetingAttendance> MeetingAttendances { get; set; } = new List<StudentMeetingAttendance>();

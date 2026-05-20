@@ -361,4 +361,65 @@ public class TermService
             throw;
         }
     }
+
+    /// <summary>
+    /// Ensures that database Terms exist for all periods in the given list.
+    /// Creates missing terms with standard academic year dates (Oct 1 - Jun 1).
+    /// </summary>
+    /// <param name="periods">List of period strings like "2024-2025"</param>
+    /// <returns>Updated list of all terms</returns>
+    public async Task<List<Term>> EnsureTermsFromPeriodsAsync(List<string> periods)
+    {
+        var existingTerms = await _context.Terms.AsNoTracking().ToListAsync();
+        var missingPeriods = periods.Where(p => !existingTerms.Any(t => t.DisplayName == p)).ToList();
+        
+        if (!missingPeriods.Any())
+        {
+            return await GetAllTermsAsync();
+        }
+
+        var sortedMissing = missingPeriods.OrderBy(p => p).ToList();
+        bool noTermsExist = !existingTerms.Any();
+        
+        foreach (var period in sortedMissing)
+        {
+            var parts = period.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out int startYear) && int.TryParse(parts[1], out int endYear))
+            {
+                // Check if already exists (race condition protection)
+                if (await _context.Terms.AnyAsync(t => t.DisplayName == period))
+                    continue;
+                    
+                var startDate = new DateTime(startYear, 10, 1);
+                var endDate = new DateTime(endYear, 6, 1);
+                
+                // Only set latest as active if no terms existed before
+                bool setActive = noTermsExist && period == sortedMissing.Last();
+                
+                var newTerm = new Term
+                {
+                    Start = startDate,
+                    End = endDate,
+                    DisplayName = period,
+                    IsActive = setActive,
+                    Description = "Auto-created from settings",
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                _context.Terms.Add(newTerm);
+                _logger.LogInformation("Created term {Period} from settings", period);
+            }
+        }
+        
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save synced terms");
+        }
+        
+        return await GetAllTermsAsync();
+    }
 }

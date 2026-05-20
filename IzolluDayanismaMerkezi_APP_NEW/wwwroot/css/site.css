@@ -1,0 +1,1406 @@
+/* ========================================================================
+   DESIGN SYSTEM FOUNDATION - CSS VARIABLES
+   ======================================================================== */
+:root {
+    /* Vibrant Color Palette - Tailwind CSS 200-level */
+    --color-violet-200: #ddd6fe;
+    --color-emerald-200: #d1fae5;
+    --color-blue-200: #bfdbfe;
+    --color-orange-200: #fed7aa;
+    --color-amber-200: #fde68a;
+    
+    /* Brand Colors */
+    --color-primary: #f07d00;
+    --color-primary-hover: #ea580c;
+    
+    /* Neutral Palette */
+    --color-gray-50: #f8fafc;
+    --color-gray-100: #f1f5f9;
+    --color-gray-200: #e2e8f0;
+    --color-gray-700: #334155;
+    --color-gray-900: #0f172a;
+    
+    /* Spacing Grid - 8px System */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    
+    /* Semantic Spacing */
+    --field-gap: 12px;      /* Between form fields */
+    --card-gap: 16px;       /* Between cards */
+    --section-gap: 24px;    /* Between major sections */
+    --page-padding: 24px;   /* Page content padding */
+    
+    /* Shadow System - Soft Layered Elevation */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.08);
+    
+    /* Border Radius - Standardized to 12px */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
+}
+
+/* ========================================================================
+   PAGE CONTAINER ARCHITECTURE
+   ======================================================================== */
+.page-container {
+    padding: var(--page-padding);
+    max-width: 100%;
+}
+
+.page-header {
+    margin-bottom: var(--section-gap);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.page-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--color-gray-900);
+}
+
+.page-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-gap);
+}
+
+/* ========================================================================
+   UNIVERSAL HOVER EFFECTS
+   ======================================================================== */
+.mud-table-row:hover {
+    background-color: rgba(240, 125, 0, 0.04) !important;
+    transition: background-color var(--transition-fast);
+}
+
+.mud-paper:not(.no-hover) {
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.mud-paper:not(.no-hover):hover {
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-2px);
+}
+
+.mud-button:not(:disabled) {
+    transition: all var(--transition-fast);
+}
+
+.mud-button:not(:disabled):hover {
+    transform: translateY(-1px);
+}
+
+.mud-card {
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.mud-card:hover {
+    box-shadow: var(--shadow-lg) !important;
+    transform: translateY(-2px);
+}
+
+/* ========================================================================
+   STANDARDIZED SHADOWS
+   ======================================================================== */
+.elevation-sm {
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.elevation-md {
+    box-shadow: var(--shadow-md) !important;
+}
+
+.elevation-lg {
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.elevation-xl {
+    box-shadow: var(--shadow-xl) !important;
+}
+
+/* ========================================================================
+   SEMANTIC SPACING UTILITIES
+   ======================================================================== */
+.field-gap {
+    margin-bottom: var(--field-gap);
+}
+
+.card-gap {
+    margin-bottom: var(--card-gap);
+}
+
+.section-gap {
+    margin-bottom: var(--section-gap);
+}
+
+/* ========================================================================
+   LEGACY COMPONENTS
+   ======================================================================== */
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.mud-table-cell {
+    padding: 8px !important;
+}
+
+/* Ana layout yapısı */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #f8fafc;
+}
+
+/* Full-height layout container */
+.app-layout {
+    min-height: 100dvh !important;
+}
+
+/* Sidebar sayfanın en üstünden başlar */
+.sidebar {
+    margin-top: 0 !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 250px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: 1100 !important;
+    background: #dde4ec !important;
+}
+
+/* App drawer container - ensures full height background on ALL layers */
+.app-drawer {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 250px !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    background: #dde4ec !important;
+}
+
+/* Force background on MudBlazor drawer element */
+.app-drawer .mud-drawer {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    background: #dde4ec !important;
+}
+
+/* Force background on drawer content wrapper */
+.app-drawer .mud-drawer-content {
+    position: relative !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    background: #dde4ec !important;
+    overflow-y: auto !important;
+}
+
+/* Force background on navigation menu */
+.app-drawer .mud-navmenu {
+    background: #dde4ec !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+}
+
+/* Force background on izollu-nav-menu wrapper */
+.app-drawer .izollu-nav-menu {
+    background: #dde4ec !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+}
+
+/* izollu-nav-menu flexbox düzeni - footer'ı alta sabitler */
+.izollu-nav-menu.sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    background: #dde4ec !important;
+}
+
+/* Sidebar içeriğinin büyümesi için */
+.sidebar .nav-menu {
+    flex-grow: 0 !important;
+}
+
+/* Page content sidebar genişliği kadar boşluk bırakır */
+.page-content {
+    padding-top: 0px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-left: 250px !important;
+    min-height: 100vh;
+}
+
+/* Responsive - mobile */
+@media (max-width: 960px) {
+    .page-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* Login Page Styles */
+.login-card {
+    transition: transform var(--transition-base), box-shadow var(--transition-base) !important;
+    background-color: white !important;
+    border-radius: var(--radius-md) !important;
+}
+
+.login-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: var(--shadow-xl) !important;
+}
+
+.login-button:hover:not(:disabled) {
+    background-color: var(--color-primary-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* Input Focus Effects */
+.mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
+}
+
+.mud-input-outlined:focus-within .mud-input-adornment {
+    color: #f59e0b !important;
+}
+
+/* Modern Header Styles */
+.modern-header {
+    background:
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%),
+        radial-gradient(circle at 80% 50%, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 50%),
+        linear-gradient(90deg, rgba(255, 201, 107, 0.95) 0%, rgba(255, 176, 55, 0.95) 50%, rgba(242, 138, 0, 0.95) 100%) !important;
+    color: white !important;
+    box-shadow: var(--shadow-lg) !important;
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-md) !important;
+}
+
+.modern-header .mud-icon-button {
+    transition: all 0.2s ease;
+}
+
+.modern-header .mud-icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    transform: scale(1.05);
+}
+
+.modern-header img {
+    transition: transform 0.2s ease;
+}
+
+.modern-header img:hover {
+    transform: scale(1.05);
+}
+
+/* Modern Card Spacing */
+.mud-grid-item {
+    padding: 8px !important;
+}
+
+/* Search Input Premium Style */
+.mud-input-root .mud-input-outlined {
+    height: 44px;
+    border-radius: 8px;
+}
+
+/* Modern Tab Styling */
+.mud-tabs .mud-tab-active {
+    border-bottom: 3px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
+}
+
+.mud-tabs .mud-tab:hover {
+    background: rgba(255, 152, 0, 0.08);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+/* Table Header Shadow */
+table thead,
+.mud-table-head {
+    box-shadow: var(--shadow-sm);
+    background: var(--color-gray-50);
+}
+
+/* Modern Navigation Menu Items */
+.nav-item {
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.nav-item:hover {
+    background: rgba(255, 152, 0, 0.15);
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-item-active {
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4) !important;
+}
+
+/* Navbar link altı çizgilerini kaldır */
+.sidebar a,
+.sidebar .mud-nav-link,
+.sidebar .nav-item,
+.izollu-nav-menu a {
+    text-decoration: none !important;
+}
+
+.sidebar a:hover,
+.sidebar .mud-nav-link:hover {
+    text-decoration: none !important;
+}
+
+/* Compact sidebar tweaks */
+.sidebar {
+    padding-top: 8px !important;
+}
+
+.sidebar .logo-container {
+    height: 100px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+/* Logo spacing from menu - adds padding below logo */
+.drawer-logo {
+    padding: 12px 12px 10px 12px !important;
+    margin-bottom: 10px !important;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+.sidebar .drawer-logo {
+    margin-bottom: 10px !important;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+/* Nav header - logo wrapper */
+.sidebar .nav-header {
+    border: none !important;
+    border-bottom: none !important;
+}
+
+.sidebar .nav-logo {
+    max-width: 240px !important;
+    max-height: 132px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+.sidebar .menu-title {
+    margin-top: 12px !important;
+    margin-bottom: 6px !important;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    opacity: 0.75;
+}
+
+.sidebar .menu-item {
+    padding: 10px 14px !important;
+    margin-bottom: 2px !important;
+}
+
+.sidebar .menu-item .mud-icon-root {
+    margin-right: 6px !important;
+}
+
+.sidebar .logout-section {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #c5cdd8;
+    background: #dde4ec !important;
+}
+
+/* Sidebar altındaki boşluğu kapatmak için */
+.sidebar::after {
+    content: '';
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: #dde4ec !important;
+    z-index: -1;
+}
+
+/* List Page Layout Styles */
+.list-page-root {
+    padding: 1.5rem;
+}
+
+.list-page-header {
+    margin-bottom: 1.5rem;
+}
+
+.list-page-stats {
+    margin-bottom: 1.5rem;
+}
+
+.list-page-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.list-page-toolbar-left {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.list-page-toolbar-right {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.list-page-tabs {
+    margin-bottom: 1rem;
+}
+
+.list-page-body {
+    width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .list-page-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .list-page-toolbar-left,
+    .list-page-toolbar-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* MudSelect/MudTextField label arka plan düzeltmesi - Dialog içindeki beyaz kutucukları kaldır */
+.mud-dialog .mud-input-outlined .mud-input-label,
+.mud-dialog .mud-input-outlined .mud-input-label-outlined,
+.mud-dialog .mud-select .mud-input-label,
+.mud-dialog .mud-select .mud-input-label-outlined {
+    background: transparent !important;
+}
+
+/* Sidebar/Navbar gri tonları */
+.sidebar {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.sidebar .nav-section-title,
+.sidebar .menu-title {
+    color: #64748b !important;
+}
+
+.sidebar .mud-nav-link {
+    color: #475569 !important;
+}
+
+.sidebar .mud-nav-link:hover {
+    background-color: rgba(100, 116, 139, 0.1) !important;
+}
+
+.sidebar .nav-item-active,
+.sidebar .mud-nav-link.active {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: white !important;
+}
+
+.sidebar .nav-footer-link {
+    color: #64748b !important;
+    background: #dde4ec !important;
+}
+
+.sidebar .nav-footer-link:hover {
+    color: #ef4444 !important;
+    background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Sidebar nav-footer tam arka plan */
+.sidebar .nav-footer {
+    background: #dde4ec !important;
+    padding-bottom: 20px !important;
+}
+
+/* ===== Form Controls - Transparent Background Style ===== */
+/* Form elementleri için şeffaf arka plan - section renklerini göstersin */
+.form-control,
+.form-select,
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+    background-color: transparent !important;
+    color: #1f2937;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+}
+
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.form-control:focus,
+.form-select:focus,
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus,
+select:focus {
+    background-color: transparent !important;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+    outline: none;
+}
+
+/* ===== MudBlazor Double Border Fix ===== */
+/* Wrapper has border, input inside should have NO border */
+
+/* Remove internal input borders - wrapper handles it */
+.mud-input-outlined .mud-input,
+.mud-input-outlined .mud-input-slot,
+.mud-input-outlined input,
+.mud-input-outlined textarea {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background-color: transparent !important;
+}
+
+/* Remove fieldset borders - causes double lines */
+.mud-input-outlined fieldset,
+.mud-input-outlined .mud-input-outlined-border {
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+}
+
+/* Focus state - only wrapper border changes */
+.mud-input-outlined:focus-within fieldset,
+.mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: #f59e0b !important;
+    border-width: 2px !important;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15) !important;
+}
+
+/* Prevent input from creating its own border on focus */
+.mud-input-outlined:focus-within .mud-input,
+.mud-input-outlined:focus-within input,
+.mud-input-outlined:focus-within textarea {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* MudBlazor Select - remove double border */
+.mud-select .mud-input-outlined .mud-input-slot,
+.mud-autocomplete .mud-input-outlined .mud-input-slot,
+.mud-picker .mud-input-outlined .mud-input-slot {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* Transparent backgrounds everywhere */
+.mud-input-root,
+.mud-input-root .mud-input,
+.mud-input-root .mud-input-slot,
+.mud-input-outlined-input,
+.mud-select-input {
+    background-color: transparent !important;
+}
+
+/* MudPaper içindeki formlar için */
+.mud-paper .mud-input-outlined .mud-input-slot,
+.mud-paper .mud-select .mud-input-slot,
+.mud-dialog .mud-input-outlined .mud-input-slot {
+    background-color: transparent !important;
+}
+
+/* Label background - transparent to show section colors */
+.mud-input-outlined .mud-input-label,
+.mud-input-outlined .mud-input-label-outlined {
+    background: transparent !important;
+}
+
+/* Bootstrap-select için şeffaf arka plan */
+.bootstrap-select>.dropdown-toggle {
+    background-color: transparent !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+    color: #1f2937 !important;
+}
+
+.bootstrap-select>.dropdown-toggle:focus,
+.bootstrap-select>.dropdown-toggle:active {
+    background-color: transparent !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15) !important;
+    outline: none !important;
+}
+
+.bootstrap-select .dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Section renkli arka planlar üzerinde daha iyi görünsün */
+.mud-paper[style*="background-color"] .mud-input-outlined .mud-input-slot,
+.mud-paper[style*="background"] .mud-input-outlined .mud-input-slot {
+    background-color: transparent !important;
+}
+
+/* ===== Form Group ve Label Stilleri ===== */
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group .form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+    background: transparent !important;
+}
+
+/* Bootstrap-select içinde form-group için */
+.form-group .bootstrap-select {
+    width: 100% !important;
+}
+
+/* Date input styling */
+input[type="date"].form-control {
+    padding: 8px 12px;
+    height: 40px;
+}
+
+input[type="date"].form-control-sm {
+    padding: 4px 8px;
+    height: 32px;
+    font-size: 0.875rem;
+}
+
+/* Search highlight for user guide */
+.search-highlight {
+    background-color: #fef08a;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-weight: 500;
+}
+
+/* ============================================
+   TRANSPARENT FORM CONTROLS - MODERN DESIGN
+   ============================================ */
+
+/* Base styling for all form controls */
+.form-control,
+.form-select,
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+    background-color: transparent !important;
+    color: #1f2937;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Placeholder styling - subtle but readable */
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+    color: rgba(0, 0, 0, 0.45);
+    opacity: 1;
+}
+
+/* Focus state - transparent background with orange accent */
+.form-control:focus,
+.form-select:focus,
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus,
+select:focus {
+    background-color: transparent !important;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    outline: none;
+}
+
+/* Disabled state */
+.form-control:disabled,
+.form-select:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+    color: rgba(0, 0, 0, 0.38);
+    cursor: not-allowed;
+}
+
+/* MudBlazor specific overrides */
+.mud-input-root .mud-input,
+.mud-select .mud-input-slot,
+.mud-input-slot input,
+.mud-input-slot textarea {
+    background-color: transparent !important;
+}
+
+.mud-input-root.mud-input-outlined .mud-input-slot {
+    background-color: transparent !important;
+}
+
+.mud-input-outlined .mud-input-slot fieldset {
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+.mud-input-outlined.mud-input-adorned-end .mud-input-slot {
+    background-color: transparent !important;
+}
+
+/* MudBlazor focus state */
+.mud-input-root.mud-focused .mud-input-slot fieldset {
+    border-color: #f59e0b !important;
+    border-width: 2px;
+}
+
+/* Bootstrap Select styling */
+.bootstrap-select .dropdown-toggle {
+    background-color: transparent !important;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    color: #1f2937;
+}
+
+.bootstrap-select .dropdown-toggle:focus {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    outline: none;
+}
+
+/* Select2 styling */
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    background-color: transparent !important;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+/* Ensure readability on colored section backgrounds */
+.section-blue input,
+.section-blue textarea,
+.section-blue select,
+.section-green input,
+.section-green textarea,
+.section-green select,
+.section-yellow input,
+.section-yellow textarea,
+.section-yellow select {
+    background-color: transparent !important;
+}
+
+/* ============================================
+   CHROME AUTOFILL FIX - Prevent white/blue background
+   ============================================ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+    background-color: transparent !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Force transparent on all MudBlazor input containers */
+.mud-input-control,
+.mud-input-control-input-container,
+.mud-input-text,
+.mud-input-outlined,
+.mud-input-underline,
+.mud-input-filled,
+.mud-select,
+.mud-autocomplete,
+.mud-picker,
+.mud-field {
+    background-color: transparent !important;
+}
+
+/* MudBlazor input slot and inner elements */
+.mud-input-slot,
+.mud-input-control .mud-input-slot,
+.mud-select .mud-input-slot,
+.mud-input-slot input,
+.mud-input-slot textarea,
+.mud-input-slot select {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* Ensure form-control and form-select inherit section background */
+.mud-paper .form-control,
+.mud-paper .form-select,
+.mud-paper input:not([type="checkbox"]):not([type="radio"]),
+.mud-paper textarea,
+.mud-paper select,
+.mud-dialog .form-control,
+.mud-dialog .form-select,
+.mud-dialog input:not([type="checkbox"]):not([type="radio"]),
+.mud-dialog textarea,
+.mud-dialog select {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* MudBlazor filled variant - force transparent */
+.mud-input-filled .mud-input-slot,
+.mud-input-filled .mud-input-control-input-container {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* Remove any background from fieldset legend areas */
+.mud-input-outlined .mud-input-label,
+.mud-input-outlined .mud-input-label-outlined,
+.mud-input-outlined legend {
+    background: transparent !important;
+}
+
+/* ============================================
+   BOOTSTRAP SELECT - Z-INDEX AND VISIBILITY FIX
+   Ensures dropdown opens above MudBlazor dialogs
+   ============================================ */
+
+/* Bootstrap Select dropdown menu - MUST be above MudBlazor dialogs */
+.bootstrap-select.open>.dropdown-menu,
+.bootstrap-select>.dropdown-menu.show,
+.dropdown-menu.show {
+    z-index: 2147483647 !important;
+    /* Maximum z-index */
+    position: absolute !important;
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* Container body dropdown - when using data-container="body" */
+body>.bootstrap-select.dropdown-menu,
+body>.dropdown-menu.show {
+    z-index: 2147483647 !important;
+}
+
+/* Make sure the selectpicker button is clickable */
+.bootstrap-select>.dropdown-toggle {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 1 !important;
+    position: relative !important;
+}
+
+/* Ensure bootstrap-select wrapper is visible */
+.bootstrap-select {
+    position: relative !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Fix for MudBlazor dialog overlay potentially blocking clicks */
+.mud-dialog-container .bootstrap-select,
+.mud-dialog .bootstrap-select {
+    z-index: 1 !important;
+}
+
+.mud-dialog-container .bootstrap-select>.dropdown-toggle,
+.mud-dialog .bootstrap-select>.dropdown-toggle {
+    pointer-events: auto !important;
+    z-index: 10 !important;
+}
+
+/* Ensure dropdown appears above all MudBlazor elements */
+.mud-overlay,
+.mud-dialog-overlay {
+    z-index: 1299 !important;
+}
+
+.mud-dialog {
+    z-index: 1300 !important;
+}
+
+/* Bootstrap select dropdown inside dialog needs higher z-index */
+.mud-dialog .dropdown-menu.show,
+.mud-dialog-container .dropdown-menu.show {
+    z-index: 2147483647 !important;
+}
+
+/* Live search input in bootstrap-select */
+.bootstrap-select .bs-searchbox input {
+    background-color: white !important;
+    border: 1px solid #ced4da !important;
+}
+
+/* Dropdown item hover state */
+.bootstrap-select .dropdown-menu .dropdown-item:hover,
+.bootstrap-select .dropdown-menu .dropdown-item:focus {
+    background-color: #f59e0b !important;
+    color: white !important;
+}
+
+/* Selected item style */
+.bootstrap-select .dropdown-menu .dropdown-item.active,
+.bootstrap-select .dropdown-menu .dropdown-item.selected {
+    background-color: #f59e0b !important;
+    color: white !important;
+}
+
+/* Bootstrap-select inner list - ensure items are visible and scrollable */
+.bootstrap-select .dropdown-menu .inner,
+.bootstrap-select .dropdown-menu.inner,
+.dropdown-menu .inner {
+    display: block !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.bootstrap-select .dropdown-menu .inner ul,
+.dropdown-menu .inner ul {
+    display: block !important;
+    max-height: none !important;
+}
+
+.bootstrap-select .dropdown-menu .inner li,
+.dropdown-menu .inner li {
+    display: block !important;
+}
+
+/* Ensure dropdown menu has proper dimensions */
+.bootstrap-select .dropdown-menu,
+body>.dropdown-menu {
+    min-width: 200px !important;
+    max-height: 400px !important;
+    overflow: visible !important;
+}
+
+/* ===== TRANSPARENT FORM INPUTS ACROSS ALL BACKGROUNDS ===== */
+/* Force transparent backgrounds on all form controls */
+.form-control,
+.form-select,
+.mud-input-root input,
+.mud-select input,
+.mud-input-outlined,
+.mud-input-filled,
+textarea.form-control,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+textarea {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* MudBlazor input slot */
+.mud-input-slot {
+    background: transparent !important;
+}
+
+/* Colored section specific overrides */
+.bg-light-purple .form-control,
+.bg-light-green .form-control,
+.bg-light-orange .form-control,
+.bg-light-blue .form-control,
+.bg-light-purple textarea,
+.bg-light-green textarea,
+.bg-light-orange textarea,
+.bg-light-blue textarea,
+.bg-light-purple input,
+.bg-light-green input,
+.bg-light-orange input,
+.bg-light-blue input,
+[style*="background"] .form-control,
+[style*="background"] textarea,
+[style*="background"] input[type="text"],
+[style*="background"] input[type="email"],
+[style*="background"] input[type="tel"] {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* MudBlazor Paper sections with colored backgrounds */
+.mud-paper .form-control,
+.mud-paper textarea,
+.mud-paper input {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Neutralize Chrome autofill white background using inset shadow hack */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+    box-shadow: 0 0 0 1000px transparent inset !important;
+    -webkit-text-fill-color: inherit !important;
+    background-color: transparent !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Preserve borders on transparent inputs */
+.form-control,
+textarea.form-control,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+.mud-input-outlined .mud-input-outlined-border {
+    border-color: rgba(0, 0, 0, 0.23) !important;
+}
+
+/* Focus states - preserve borders and add orange glow */
+.form-control:focus,
+textarea.form-control:focus,
+input:focus,
+.mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
+    outline: none !important;
+}
+
+.mud-input-outlined:focus-within .mud-input-adornment {
+    color: #f59e0b !important;
+}
+
+/* Dialog form inputs transparency */
+.mud-dialog .mud-input-outlined,
+.mud-dialog .mud-input-filled,
+.mud-dialog .form-control,
+.mud-dialog .form-select,
+.mud-dialog textarea,
+.mud-dialog input {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Ensure text remains visible on colored backgrounds */
+.mud-input-root input,
+.form-control,
+.form-select,
+textarea,
+input {
+    color: inherit !important;
+}
+
+/* Placeholder text visibility on colored backgrounds */
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+    color: rgba(0, 0, 0, 0.5) !important;
+    opacity: 1 !important;
+}
+
+/* Disabled inputs should remain transparent */
+.form-control:disabled,
+input:disabled,
+textarea:disabled {
+    background: transparent !important;
+    background-color: transparent !important;
+    opacity: 0.6;
+}
+
+/* ===== BOOTSTRAP SELECT TRANSPARENCY ===== */
+/* Bootstrap Select wrapper and button */
+.bootstrap-select .dropdown-toggle,
+.bootstrap-select .btn,
+.bootstrap-select button,
+.bootstrap-select .dropdown-toggle.btn-default {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: rgba(0, 0, 0, 0.23) !important;
+}
+
+/* Bootstrap Select in colored sections */
+.mud-paper .bootstrap-select .dropdown-toggle,
+.mud-paper .bootstrap-select .btn,
+[style*="background"] .bootstrap-select .dropdown-toggle,
+[style*="background"] .bootstrap-select .btn {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Bootstrap Select focus state */
+.bootstrap-select .dropdown-toggle:focus,
+.bootstrap-select.show .dropdown-toggle {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
+    outline: none !important;
+}
+
+/* Bootstrap Select filter/search input inside dropdown */
+.bootstrap-select .bs-searchbox .form-control {
+    background: white !important;
+    background-color: white !important;
+}
+
+/* Ensure dropdown menu has proper background (NOT transparent) */
+.bootstrap-select .dropdown-menu {
+    background: white !important;
+    background-color: white !important;
+}
+
+/* Form labels on colored backgrounds */
+.form-label,
+label.form-label {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* ========================================================================
+   FORCE TRANSPARENT INPUTS - HIGH SPECIFICITY OVERRIDES
+   ======================================================================== */
+/* Target Standard Bootstrap Inputs */
+.form-control, 
+.form-select,
+textarea.form-control,
+input.form-control {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* Target MudBlazor Inputs (Deep Selectors) */
+.mud-input > input.mud-input-slot,
+.mud-input-slot.mud-input-root,
+.mud-input-control > .mud-input-control-input-container > .mud-input > input,
+.mud-input-root.mud-input-underline input,
+.mud-input-root input,
+.mud-select input {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* MudBlazor Outlined Inputs */
+.mud-input.mud-input-outlined .mud-input-slot,
+.mud-input-outlined input {
+    background-color: transparent !important;
+}
+
+/* FIX CHROME AUTOFILL WHITE BACKGROUND (The "Transition Hack") */
+/* This prevents Chrome from painting the input white when autofilling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px rgba(0,0,0,0) inset !important;
+    -webkit-text-fill-color: inherit !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Force transparent on ALL input types within colored sections */
+[style*="background-color"] input,
+[style*="background-color"] textarea,
+[style*="background-color"] select,
+.mud-paper input,
+.mud-paper textarea,
+.mud-paper select {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* Ensure focus states remain transparent */
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus,
+input.form-control:focus,
+.mud-input-root input:focus {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* ========================================================================
+   FORM CONTROLS - TRANSPARENT BACKGROUNDS FOR COLORED SECTIONS
+   ======================================================================== */
+/* Make all form controls transparent to show parent section colors */
+.form-control,
+.form-select,
+input:not([type="checkbox"]):not([type="radio"]):not(.mud-input-root input),
+textarea,
+select:not(.mud-input-root select) {
+    background-color: transparent !important;
+    color: #1f2937;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+}
+
+/* Placeholder styling for readability on colored backgrounds */
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+    color: rgba(0, 0, 0, 0.45);
+    opacity: 1;
+}
+
+/* Focus state - keep transparent with orange accent border */
+.form-control:focus,
+.form-select:focus,
+input:not([type="checkbox"]):not([type="radio"]):not(.mud-input-root input):focus,
+textarea:focus,
+select:not(.mud-input-root select):focus {
+    background-color: transparent !important;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+    outline: none;
+}
+
+/* Disabled state */
+.form-control:disabled,
+.form-select:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    opacity: 0.6;
+}
+
+/* ========================================================================
+   FORCE TRANSPARENT INPUTS - AGGRESSIVE CSS OVERRIDE
+   ======================================================================== */
+/* Target Standard Bootstrap Inputs */
+.form-control, 
+.form-select,
+textarea.form-control,
+input.form-control {
+    background-color: transparent !important;
+    background-image: none !important; /* Removes some browser defaults */
+}
+
+/* Target MudBlazor Inputs (Deep Selectors) */
+.mud-input > input.mud-input-slot,
+.mud-input-slot.mud-input-root,
+.mud-input-control > .mud-input-control-input-container > .mud-input > input,
+.mud-input-outlined input,
+.mud-input-outlined textarea,
+.mud-select input,
+.mud-select .mud-input-slot {
+    background-color: transparent !important;
+}
+
+/* Fix MudBlazor Paper backgrounds inside form sections */
+.mud-paper input,
+.mud-paper textarea,
+.mud-paper select,
+.mud-paper .mud-input-slot {
+    background-color: transparent !important;
+}
+
+/* Target inputs inside colored parent containers */
+[style*="background-color"] input,
+[style*="background-color"] textarea,
+[style*="background-color"] select,
+[style*="background-color"] .mud-input-slot {
+    background-color: transparent !important;
+}
+
+/* FIX CHROME AUTOFILL WHITE BACKGROUND (The "Transition Hack") */
+/* This prevents Chrome from painting the input white when autofilling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px rgba(0,0,0,0) inset !important; /* Transparent shadow */
+    -webkit-text-fill-color: inherit !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Override focus states to maintain transparency */
+.form-control:focus,
+.form-select:focus,
+input.form-control:focus,
+textarea.form-control:focus,
+.mud-input-outlined:focus-within input,
+.mud-input:focus-within input {
+    background-color: transparent !important;
+}

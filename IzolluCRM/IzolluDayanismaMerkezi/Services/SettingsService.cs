@@ -550,4 +550,12 @@ public class SettingsService
         var json = JsonSerializer.Serialize(amounts);
         await SetValueAsync("ScholarshipAmountsByPeriod", json, "Dönem bazlı burs tutarları");
     }
+    public async Task<List<Settings>> GetScholarshipTermSettingsAsync()
+    {
+        return await _context.Settings
+            .AsNoTracking()
+            .Where(s => s.Key == "Dönem")
+            .OrderByDescending(s => s.Value)
+            .ToListAsync();
+    }
 }

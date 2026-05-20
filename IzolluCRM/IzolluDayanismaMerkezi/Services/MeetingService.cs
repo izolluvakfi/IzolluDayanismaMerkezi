@@ -8,11 +8,13 @@ public class MeetingService
 {
     private readonly ApplicationDbContext _context;
     private readonly ActivityLogService _logService;
+    private readonly StudentScholarshipStatusService _scholarshipStatusService;
 
-    public MeetingService(ApplicationDbContext context, ActivityLogService logService)
+    public MeetingService(ApplicationDbContext context, ActivityLogService logService, StudentScholarshipStatusService scholarshipStatusService)
     {
         _context = context;
         _logService = logService;
+        _scholarshipStatusService = scholarshipStatusService;
     }
 
     public async Task<List<Meeting>> GetAllAsync()
@@ -75,6 +77,7 @@ public class MeetingService
         existing.Tarih = meeting.Tarih;
         existing.BitisTarihi = meeting.BitisTarihi;
         existing.Aciklama = meeting.Aciklama;
+        existing.TermId = meeting.TermId;
 
         await _context.SaveChangesAsync();
         await _logService.LogAsync("ToplantiGuncelle", $"Toplantı güncellendi: {meeting.Baslik}");
@@ -233,6 +236,9 @@ public class MeetingService
             .Where(s => absentStudentIds.Contains(s.Id) && s.AktifBursMu)
             .ToListAsync();
 
+        // Infer term from meeting date for month-based scholarship cutting
+        var term = await _scholarshipStatusService.InferTermFromDateAsync(latestMeeting.Tarih);
+
         foreach (var student in affectedStudents)
         {
             student.AktifBursMu = false;
@@ -249,6 +255,13 @@ public class MeetingService
                 student.Notlar = $"{student.Notlar}; {reason}";
             }
 
+            // Cut the specific month's scholarship in StudentScholarshipStatus table
+            if (term != null)
+            {
+                await _scholarshipStatusService.CutScholarshipByMeetingDateAsync(
+                    student.Id, term.Id, latestMeeting.Tarih, $"Toplantıya Katılmadı ({latestMeeting.Baslik})");
+            }
+
             await _logService.LogAsync(
                 "BursKes",
                 $"{student.AdSoyad} - Bursu kesildi: {reason}"
@@ -257,5 +270,33 @@ public class MeetingService
 
         await _context.SaveChangesAsync();
         return affectedStudents;
+    }
+
+    /// <summary>
+    /// Gets the most recent meeting
+    /// </summary>
+    public async Task<Meeting?> GetLatestMeetingAsync()
+    {
+        return await _context.Meetings
+            .OrderByDescending(m => m.Tarih)
+            .FirstOrDefaultAsync();
+    }
+
+    /// <summary>
+    /// Gets students who didn't attend a specific meeting
+    /// </summary>
+    public async Task<List<Student>> GetAbsentStudentsAsync(int meetingId)
+    {
+        var absentStudentIds = await _context.StudentMeetingAttendances
+            .Where(a => a.MeetingId == meetingId && !a.Katildi)
+            .Select(a => a.StudentId)
+            .ToListAsync();
+
+        if (!absentStudentIds.Any())
+            return new List<Student>();
+
+        return await _context.Students
+            .Where(s => absentStudentIds.Contains(s.Id) && s.AktifBursMu)
+            .ToListAsync();
     }
 }
