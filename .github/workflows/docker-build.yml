@@ -39,11 +39,3 @@ jobs:
             ghcr.io/izolluvakfi/izolludayanismamerkezi:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        if: env.RAILWAY_TOKEN != ''
-        run: |
-          npm install -g @railway/cli
-          railway redeploy --service IzolluDayanismaMerkezi --yes
