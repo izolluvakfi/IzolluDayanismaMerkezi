@@ -4,6 +4,7 @@
 @inject RbacService RbacService
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Giriş - İzollu Dayanışma Merkezi</PageTitle>
 
@@ -133,6 +134,8 @@
         if (user != null)
         {
             AuthService.SetUser(user);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "izollu_session",
+                $"{{\"userId\":{user.Id}}}");
             Snackbar.Add($"Hoş geldiniz, {user.DisplayName ?? user.Username}! ({AuthService.GetRoleDisplayName()})", Severity.Success);
             await Task.Delay(500);
             NavigationManager.NavigateTo("/");

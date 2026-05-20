@@ -17,6 +17,7 @@ public static class Permissions
 public class AuthService
 {
     public bool IsAuthenticated { get; private set; }
+    public int UserId { get; private set; }
     public string Username { get; private set; } = string.Empty;
     public string DisplayName { get; private set; } = string.Empty;
     public UserRole Role { get; private set; } = UserRole.ReadOnly;
@@ -30,6 +31,7 @@ public class AuthService
     public void SetUser(AppUser user)
     {
         IsAuthenticated = true;
+        UserId = user.Id;
         Username = user.Username;
         DisplayName = user.DisplayName ?? user.Username;
         Role = user.Role;
@@ -39,6 +41,7 @@ public class AuthService
     public void Logout()
     {
         IsAuthenticated = false;
+        UserId = 0;
         Username = string.Empty;
         DisplayName = string.Empty;
         Role = UserRole.ReadOnly;

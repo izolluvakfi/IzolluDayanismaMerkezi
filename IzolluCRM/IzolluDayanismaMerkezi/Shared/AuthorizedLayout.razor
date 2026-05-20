@@ -2,12 +2,18 @@
 @implements IDisposable
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject RbacService RbacService
 
 <MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@if (AuthService.IsAuthenticated)
+@if (!_sessionChecked)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Style="position:fixed;top:0;left:0;right:0;z-index:9999;" />
+}
+else if (AuthService.IsAuthenticated)
 {
     <MudLayout>
         <MudDrawer Open="true"
@@ -29,12 +35,61 @@ else
 }
 
 @code {
+    private bool _sessionChecked = false;
+
     protected override void OnInitialized()
     {
         AuthService.OnAuthStateChanged += OnAuthStateChanged;
-        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
-        if (!currentPath.StartsWith("login") && !AuthService.IsAuthenticated)
-            Navigation.NavigateTo("/login", true);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _sessionChecked) return;
+        _sessionChecked = true;
+
+        if (!AuthService.IsAuthenticated)
+        {
+            await TryRestoreSessionAsync();
+
+            if (!AuthService.IsAuthenticated)
+            {
+                var path = Navigation.ToBaseRelativePath(Navigation.Uri);
+                if (!path.StartsWith("login"))
+                    Navigation.NavigateTo("/login", true);
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task TryRestoreSessionAsync()
+    {
+        try
+        {
+            var stored = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", "izollu_session");
+            if (string.IsNullOrEmpty(stored)) return;
+
+            var doc = System.Text.Json.JsonDocument.Parse(stored);
+            if (!doc.RootElement.TryGetProperty("userId", out var userIdProp)) return;
+
+            var user = await RbacService.GetUserByIdAsync(userIdProp.GetInt32());
+            if (user != null && user.IsActive)
+                AuthService.SetUser(user);
+            else
+                await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "izollu_session");
+        }
+        catch
+        {
+            // Hatalı session — temizle
+            try { await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "izollu_session"); } catch { }
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        try { await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "izollu_session"); } catch { }
+        AuthService.Logout();
+        Navigation.NavigateTo("/login", forceLoad: true);
     }
 
     private void OnAuthStateChanged()
@@ -45,12 +100,6 @@ else
     public void Dispose()
     {
         AuthService.OnAuthStateChanged -= OnAuthStateChanged;
-    }
-
-    private void HandleLogout()
-    {
-        AuthService.Logout();
-        Navigation.NavigateTo("/login", forceLoad: true);
     }
 
     private MudTheme _theme = new MudTheme()
