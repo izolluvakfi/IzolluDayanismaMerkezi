@@ -40,5 +40,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trigger Railway deploy
-        if: ${{ secrets.RAILWAY_DEPLOY_HOOK != '' }}
+        env:
+          HOOK: ${{ secrets.RAILWAY_DEPLOY_HOOK }}
+        if: env.HOOK != ''
         run: curl -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
