@@ -4,6 +4,7 @@
 @inject ApplicationDbContext DbContext
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject AuthService AuthService
 @implements IDisposable
 
 <PageTitle>Veritabanı Temizleme</PageTitle>
@@ -85,6 +86,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!AuthService.IsSuperAdmin) { Navigation.NavigateTo("/"); return; }
         if (_disposed) return;
         await LoadCounts();
     }

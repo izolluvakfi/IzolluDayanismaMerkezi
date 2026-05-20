@@ -1,6 +1,8 @@
 @page "/test-settings"
 @inject SettingsService SettingsService
 @inject ApplicationDbContext DbContext
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 @using IzolluVakfi.Data
 @using Microsoft.EntityFrameworkCore
 
@@ -68,6 +70,11 @@
     private bool _loaded = false;
     private List<IzolluVakfi.Data.Entities.Settings> _allSettings = new();
     private List<string> _sectors = new();
+
+    protected override void OnInitialized()
+    {
+        if (!AuthService.IsSuperAdmin) Navigation.NavigateTo("/");
+    }
 
     private async Task LoadData()
     {
