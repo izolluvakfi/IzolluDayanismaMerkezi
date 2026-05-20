@@ -24,6 +24,13 @@ public class RoleBasedScholarshipPdf
 
 public class PdfService
 {
+    private static TextStyle PdfTextStyle(TextStyle style, int fontSize)
+    {
+        return style
+            .FontFamily("Arial", "DejaVu Sans", "Liberation Sans")
+            .FontSize(fontSize);
+    }
+
     public PdfService()
     {
         QuestPDF.Settings.License = LicenseType.Community;
@@ -100,7 +107,7 @@ public class PdfService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(10));
+                page.DefaultTextStyle(x => PdfTextStyle(x, 10));
 
                 page.Header()
                     .Text(text =>
@@ -184,7 +191,7 @@ public class PdfService
                 page.Size(PageSizes.A4.Landscape());
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(12));
+                page.DefaultTextStyle(x => PdfTextStyle(x, 12));
 
                 // Kapak sayfası
                 page.Content()
@@ -203,7 +210,7 @@ public class PdfService
                 page.Size(PageSizes.A4.Landscape());
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(14));
+                page.DefaultTextStyle(x => PdfTextStyle(x, 14));
 
                 page.Header()
                     .Text("Özet Bilgiler").FontSize(24).Bold();
@@ -280,7 +287,7 @@ public class PdfService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(9));
+                page.DefaultTextStyle(x => PdfTextStyle(x, 9));
 
                 page.Header()
                     .AlignCenter()
@@ -354,7 +361,7 @@ public class PdfService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(9));
+                page.DefaultTextStyle(x => PdfTextStyle(x, 9));
 
                 page.Header()
                     .AlignCenter()
@@ -425,7 +432,7 @@ public class PdfService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(9));
+                page.DefaultTextStyle(x => PdfTextStyle(x, 9));
 
                 page.Header()
                     .AlignCenter()
@@ -507,7 +514,7 @@ public class PdfService
         List<RoleBasedScholarshipPdf> roleBasedScholarshipData)
     {
         // Enable debugging to see layout issues
-        QuestPDF.Settings.EnableDebugging = true;
+        QuestPDF.Settings.EnableDebugging = false;
         
         var document = Document.Create(container =>
         {
@@ -516,7 +523,7 @@ public class PdfService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(10));
+                page.DefaultTextStyle(x => PdfTextStyle(x, 10));
 
                 page.Header()
                     .AlignCenter()
@@ -545,7 +552,7 @@ public class PdfService
                                 // Card: Total Students
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(totalStudents.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -556,7 +563,7 @@ public class PdfService
                                 // Card: Scholarship Students
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(activeScholarships.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -567,7 +574,7 @@ public class PdfService
                                 // Card: Graduates
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(graduatedCount.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -578,7 +585,7 @@ public class PdfService
                                 // Card: Members
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(totalMembers.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -594,7 +601,7 @@ public class PdfService
                                 // Card: Period Scholarship Amount
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text($"{periodBursTutari:N0} ₺").FontSize(14).Bold().FontColor(Colors.Grey.Darken3);
@@ -605,7 +612,7 @@ public class PdfService
                                 // Card: Total Paid Scholarship
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text($"{totalPaidScholarship:N0} ₺").FontSize(14).Bold().FontColor(Colors.Grey.Darken3);
@@ -616,7 +623,7 @@ public class PdfService
                                 // Card: Pledged Count
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(pledgedCount.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -627,7 +634,7 @@ public class PdfService
                                 // Card: Realized Count
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(realizedCount.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -643,7 +650,7 @@ public class PdfService
                                 // Card: Donors
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(totalDonors.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -654,7 +661,7 @@ public class PdfService
                                 // Card: Total Aids
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(totalAidsCount.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -665,7 +672,7 @@ public class PdfService
                                 // Card: Villages
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(villageCount.ToString()).FontSize(20).Bold().FontColor(Colors.Grey.Darken3);
@@ -676,7 +683,7 @@ public class PdfService
                                 // Card: Active Period
                                 cardRow.RelativeItem(1).Padding(2).Column(cardCol =>
                                 {
-                                    cardCol.Item().Height(55).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                    cardCol.Item().MinHeight(62).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2)
                                         .Padding(8).AlignCenter().AlignMiddle().Column(content =>
                                         {
                                             content.Item().AlignCenter().Text(activePeriod).FontSize(12).Bold().FontColor(Colors.Grey.Darken3);

@@ -26,9 +26,14 @@ RUN dotnet publish "IzolluVakfi.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# SQLite icin gerekli sistem kutuphaneleri
+# SQLite ve PDF render icin gerekli sistem kutuphaneleri/fontlar
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libsqlite3-0 \
+    fontconfig \
+    fonts-dejavu-core \
+    fonts-dejavu-extra \
+    fonts-liberation \
+    && fc-cache -f \
     && rm -rf /var/lib/apt/lists/*
 
 # Publish ciktisini kopyala
@@ -40,8 +45,8 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Port
-EXPOSE 5000
-ENV ASPNETCORE_URLS=http://+:5000
+EXPOSE 8080
+ENV PORT=8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["/app/entrypoint.sh"]
