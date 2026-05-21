@@ -104,7 +104,13 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 
-app.MapBlazorHub();
+// Blazor Hub: tüm transport'lara izin ver (WebSocket öncelikli, kopunca
+// otomatik Long Polling'e düşer - mobil network'ler için kritik)
+app.MapBlazorHub(options =>
+{
+    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets
+                       | Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+});
 app.MapFallbackToPage("/_Host");
 
 // Initialize database

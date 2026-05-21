@@ -59,23 +59,85 @@
     <script src="js/responsive.js"></script>
     <script src="_framework/blazor.server.js" autostart="false"></script>
     <script>
-        // Blazor reconnect ayarları - daha uzun ve çok sayıda deneme
+        // Blazor reconnect ayarları
         Blazor.start({
+            // 3) WebSocket koparsa long polling'e düş (mobil network için daha stabil)
+            configureSignalR: function (builder) {
+                builder.withAutomaticReconnect([0, 1000, 2000, 3000, 5000, 8000, 13000, 20000]);
+            },
             reconnectionOptions: {
-                maxRetries: 30,
-                retryIntervalMilliseconds: 3000,
+                maxRetries: 50,
+                retryIntervalMilliseconds: 2500,
             },
             reconnectionHandler: {
                 onConnectionDown: () => {
                     document.getElementById('reconnect-modal').style.display = 'flex';
+                    document.getElementById('reconnect-failed').style.display = 'none';
                 },
                 onConnectionUp: () => {
                     document.getElementById('reconnect-modal').style.display = 'none';
+                    document.getElementById('reconnect-failed').style.display = 'none';
                 },
                 onConnectionFailed: () => {
                     document.getElementById('reconnect-modal').style.display = 'none';
                     document.getElementById('reconnect-failed').style.display = 'flex';
                 }
+            }
+        }).then(() => {
+            console.log('[Blazor] başlatıldı');
+        }).catch(err => {
+            console.error('[Blazor] başlatma hatası:', err);
+        });
+
+        // 4) Telefon ekranı/sekme tekrar açılınca otomatik reconnect tetikle
+        //    iOS Safari sekme arka plana atılınca WebSocket'i askıya alır,
+        //    geri dönünce bağlantı çoğunlukla kopuk olur.
+        let _reconnectInProgress = false;
+
+        async function tryManualReconnect() {
+            if (_reconnectInProgress) return;
+            try {
+                _reconnectInProgress = true;
+                if (window.Blazor && typeof Blazor.reconnect === 'function') {
+                    const ok = await Blazor.reconnect();
+                    if (!ok) {
+                        // Reconnect başarısız - sayfayı yenile
+                        console.warn('[Blazor] reconnect false döndü, sayfa yenileniyor');
+                        location.reload();
+                    }
+                }
+            } catch (e) {
+                console.warn('[Blazor] manuel reconnect hatası:', e);
+            } finally {
+                _reconnectInProgress = false;
+            }
+        }
+
+        // Sekme/uygulama tekrar görünür olduğunda
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // Reconnect modal görünüyorsa veya bağlantı yoksa tekrar dene
+                const modal = document.getElementById('reconnect-modal');
+                const failed = document.getElementById('reconnect-failed');
+                if ((modal && modal.style.display === 'flex') ||
+                    (failed && failed.style.display === 'flex')) {
+                    tryManualReconnect();
+                }
+            }
+        });
+
+        // Network tekrar online olduğunda (örn. tüneldan çıkıldı)
+        window.addEventListener('online', () => {
+            console.log('[Network] tekrar online, reconnect deneniyor');
+            tryManualReconnect();
+        });
+
+        // Pageshow event - bfcache'den geri dönüş (iOS Safari için kritik)
+        window.addEventListener('pageshow', (evt) => {
+            if (evt.persisted) {
+                // Sayfa bfcache'den geldi, bağlantı kesin kopuktur
+                console.log('[Blazor] bfcache restore, reconnect deneniyor');
+                tryManualReconnect();
             }
         });
     </script>
