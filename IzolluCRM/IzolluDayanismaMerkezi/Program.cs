@@ -30,7 +30,22 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor(options =>
+{
+    // Bağlantı kesilince kullanıcıya daha uzun süre bekletme şansı ver
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(5);
+    options.DisconnectedCircuitMaxRetained = 50;
+    options.JSInteropDefaultCallTimeout = TimeSpan.FromSeconds(60);
+    options.DetailedErrors = false;
+})
+.AddHubOptions(options =>
+{
+    // SignalR keep-alive: Railway'in idle timeout'unu aşmak için
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(120);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(30);
+    options.KeepAliveInterval = TimeSpan.FromSeconds(20);
+    options.MaximumReceiveMessageSize = 32 * 1024; // 32KB
+});
 builder.Services.AddMudServices();
 
 // Add Database Context

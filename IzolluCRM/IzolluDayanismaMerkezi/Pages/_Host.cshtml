@@ -22,16 +22,32 @@
 <body>
     <component type="typeof(App)" render-mode="ServerPrerendered" />
 
-    <div id="blazor-error-ui">
-        <environment include="Staging,Production">
-            Bir hata oluştu.
-        </environment>
-        <environment include="Development">
-            Beklenmeyen bir hata oluştu. Daha fazla bilgi için tarayıcı geliştirme araçlarına bakın.
-        </environment>
-        <a href="" class="reload">Yenile</a>
-        <a class="dismiss">🗙</a>
+    <!-- Yeniden Bağlanıyor Modal -->
+    <div id="reconnect-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+        <div style="background:white; border-radius:16px; padding:32px 28px; max-width:320px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="width:52px; height:52px; border:4px solid #f3f3f3; border-top:4px solid #f07d00; border-radius:50%; animation:spin 0.9s linear infinite; margin:0 auto 20px;"></div>
+            <p style="font-size:1rem; font-weight:600; color:#1f2937; margin:0 0 6px;">Yeniden bağlanılıyor…</p>
+            <p style="font-size:0.8rem; color:#6b7280; margin:0;">Lütfen bekleyin, sunucuya bağlanmaya çalışılıyor.</p>
+        </div>
     </div>
+
+    <!-- Bağlantı Başarısız Modal -->
+    <div id="reconnect-failed" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+        <div style="background:white; border-radius:16px; padding:32px 28px; max-width:320px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:2.5rem; margin-bottom:12px;">⚠️</div>
+            <p style="font-size:1rem; font-weight:600; color:#1f2937; margin:0 0 8px;">Bağlantı kesildi</p>
+            <p style="font-size:0.8rem; color:#6b7280; margin:0 0 20px;">Sunucuya ulaşılamıyor. Sayfayı yenileyerek tekrar deneyin.</p>
+            <button onclick="location.reload()" style="background:linear-gradient(90deg,#f07d00,#f5a93c); color:white; border:none; border-radius:999px; padding:10px 28px; font-size:0.9rem; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(240,125,0,0.35);">
+                Sayfayı Yenile
+            </button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <!-- blazor-error-ui yerine reconnect modal'lar kullanılıyor -->
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
@@ -41,7 +57,28 @@
     <script src="js/select2-helper.js"></script>
     <script src="js/doc-search.js"></script>
     <script src="js/responsive.js"></script>
-    <script src="_framework/blazor.server.js"></script>
+    <script src="_framework/blazor.server.js" autostart="false"></script>
+    <script>
+        // Blazor reconnect ayarları - daha uzun ve çok sayıda deneme
+        Blazor.start({
+            reconnectionOptions: {
+                maxRetries: 30,
+                retryIntervalMilliseconds: 3000,
+            },
+            reconnectionHandler: {
+                onConnectionDown: () => {
+                    document.getElementById('reconnect-modal').style.display = 'flex';
+                },
+                onConnectionUp: () => {
+                    document.getElementById('reconnect-modal').style.display = 'none';
+                },
+                onConnectionFailed: () => {
+                    document.getElementById('reconnect-modal').style.display = 'none';
+                    document.getElementById('reconnect-failed').style.display = 'flex';
+                }
+            }
+        });
+    </script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
