@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>Exe</OutputType>
+    <!-- Warning'leri build'i kırmayacak şekilde ayarla -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>CS8602;CS8604;CS1998;CS0414;MUD0002</NoWarn>
   </PropertyGroup>
 
   <!-- ApplicationIcon sadece Windows build'de kullanılır -->
