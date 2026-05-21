@@ -15,15 +15,34 @@
 }
 else if (AuthService.IsAuthenticated)
 {
-    <MudLayout>
-        <MudDrawer Open="true"
+    <MudLayout Class="app-layout">
+        <!-- MOBILE BACKDROP -->
+        @if (_drawerOpen && _isMobile)
+        {
+            <div class="mobile-backdrop" @onclick="ToggleDrawer"></div>
+        }
+
+        <MudDrawer @bind-Open="@_drawerOpen"
                    ClipMode="DrawerClipMode.Always"
                    Elevation="2"
-                   Variant="@DrawerVariant.Persistent">
+                   Variant="@(_isMobile ? DrawerVariant.Temporary : DrawerVariant.Persistent)"
+                   Class="sidebar app-drawer">
             <NavMenu OnLogout="@EventCallback.Factory.Create(this, HandleLogout)" />
         </MudDrawer>
-        <MudMainContent>
-            <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+        <MudMainContent Class="page-content">
+            <!-- MOBILE HAMBURGER BAR -->
+            @if (_isMobile)
+            {
+                <div class="mobile-topbar">
+                    <button class="hamburger-btn" @onclick="ToggleDrawer" aria-label="Menü">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="/izollu-vakfi.png" alt="İzollu" class="mobile-logo" />
+                </div>
+            }
+            <MudContainer MaxWidth="MaxWidth.False" Class="@(_isMobile ? "mt-2" : "mt-4")">
                 @Body
             </MudContainer>
         </MudMainContent>
@@ -36,6 +55,9 @@ else
 
 @code {
     private bool _sessionChecked = false;
+    private bool _drawerOpen = true;
+    private bool _isMobile = false;
+    private DotNetObjectReference<AuthorizedLayout>? _dotNetRef;
 
     protected override void OnInitialized()
     {
@@ -49,6 +71,23 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            // Mobil ekran tespiti + resize listener kaydı
+            try
+            {
+                _isMobile = await JSRuntime.InvokeAsync<bool>("isMobileScreen");
+                _drawerOpen = !_isMobile;
+                _dotNetRef = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("registerResizeCallback", _dotNetRef);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch
+            {
+                // JS yüklenmemişse sessizce geç
+            }
+        }
+
         if (!firstRender || _sessionChecked) return;
 
         // Reload durumu — localStorage'dan session'ı geri yükle
@@ -71,6 +110,20 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
+    [JSInvokable]
+    public void OnScreenResize(bool isMobile)
+    {
+        if (_isMobile == isMobile) return;
+        _isMobile = isMobile;
+        _drawerOpen = !isMobile;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
     private async Task TryRestoreSessionAsync()
     {
         try
@@ -89,7 +142,6 @@ else
         }
         catch
         {
-            // Hatalı session — temizle
             try { await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "izollu_session"); } catch { }
         }
     }
@@ -97,9 +149,6 @@ else
     private async Task HandleLogout()
     {
         try { await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "izollu_session"); } catch { }
-        // AuthService.Logout() ÇAĞIRMA: OnAuthStateChanged tetiklenir, sidebar kaybolur,
-        // ama forceLoad reload tamamlanana kadar 1-2sn mevcut sayfa boş görünür.
-        // forceLoad zaten tüm circuit'i sıfırlayacak, AuthService de yeni circuit'te boş başlayacak.
         Navigation.NavigateTo("/login", forceLoad: true);
     }
 
@@ -111,6 +160,7 @@ else
     public void Dispose()
     {
         AuthService.OnAuthStateChanged -= OnAuthStateChanged;
+        _dotNetRef?.Dispose();
     }
 
     private MudTheme _theme = new MudTheme()

@@ -1,5 +1,4 @@
 @inherits LayoutComponentBase
-@inject IJSRuntime JS
 
 <MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
@@ -9,64 +8,25 @@
 @inject AuthService AuthService
 
 <MudLayout Class="app-layout">
-    <!-- MOBILE BACKDROP -->
-    @if (_drawerOpen && _isMobile)
-    {
-        <div class="mobile-backdrop" @onclick="ToggleDrawer"></div>
-    }
-
     <!-- LEFT NAVIGATION -->
     <MudDrawer @bind-Open="@_drawerOpen"
                Anchor="Anchor.Left"
                Elevation="1"
                ClipMode="DrawerClipMode.Never"
-               Variant="@(_isMobile ? DrawerVariant.Temporary : DrawerVariant.Persistent)"
+               Variant="@DrawerVariant.Persistent"
                Class="sidebar app-drawer">
         <NavMenu />
     </MudDrawer>
 
     <!-- PAGE CONTENT -->
     <MudMainContent Class="page-content">
-        <!-- MOBILE HAMBURGER BAR -->
-        @if (_isMobile)
-        {
-            <div class="mobile-topbar">
-                <button class="hamburger-btn" @onclick="ToggleDrawer">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <img src="/izollu-vakfi.png" alt="İzollu" class="mobile-logo" />
-            </div>
-        }
         @Body
     </MudMainContent>
 </MudLayout>
 
 @code {
     private bool _drawerOpen = true;
-    private bool _isMobile = false;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            _isMobile = await JS.InvokeAsync<bool>("isMobileScreen");
-            _drawerOpen = !_isMobile;
-            StateHasChanged();
-
-            await JS.InvokeVoidAsync("registerResizeCallback", DotNetObjectReference.Create(this));
-        }
-    }
-
-    [JSInvokable]
-    public void OnScreenResize(bool isMobile)
-    {
-        _isMobile = isMobile;
-        if (!isMobile) _drawerOpen = true;
-        else _drawerOpen = false;
-        StateHasChanged();
-    }
+    private void NavigateToSettings() => Navigation.NavigateTo("/settings");
 
     private void ToggleDrawer()
     {
@@ -81,6 +41,7 @@
 
     protected override void OnInitialized()
     {
+        // Eğer login sayfasında değilse ve giriş yapmamışsa login'e yönlendir
         if (!Navigation.Uri.Contains("/login") && !AuthService.IsAuthenticated)
         {
             Navigation.NavigateTo("/login", forceLoad: true);
