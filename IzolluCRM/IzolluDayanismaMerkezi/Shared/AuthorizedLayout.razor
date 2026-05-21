@@ -15,38 +15,32 @@
 }
 else if (AuthService.IsAuthenticated)
 {
-    <MudLayout Class="app-layout">
-        <!-- MOBILE BACKDROP -->
-        @if (_drawerOpen && _isMobile)
-        {
-            <div class="mobile-backdrop" @onclick="ToggleDrawer"></div>
-        }
+    <div class="izollu-app-shell">
+        <!-- Mobil topbar (sadece mobilde görünür, CSS ile) -->
+        <header class="izollu-mobile-topbar">
+            <button class="hamburger-btn" type="button" onclick="window.izolluToggleSidebar()" aria-label="Menü">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <img src="/izollu-vakfi.png" alt="İzollu" class="mobile-logo" />
+        </header>
 
-        <MudDrawer @bind-Open="@_drawerOpen"
-                   ClipMode="DrawerClipMode.Always"
-                   Elevation="2"
-                   Variant="@(_isMobile ? DrawerVariant.Temporary : DrawerVariant.Persistent)"
-                   Class="sidebar app-drawer">
+        <!-- Sidebar (desktop'ta sabit görünür, mobilde drawer olarak) -->
+        <aside class="izollu-sidebar">
             <NavMenu OnLogout="@EventCallback.Factory.Create(this, HandleLogout)" />
-        </MudDrawer>
-        <MudMainContent Class="page-content">
-            <!-- MOBILE HAMBURGER BAR -->
-            @if (_isMobile)
-            {
-                <div class="mobile-topbar">
-                    <button class="hamburger-btn" @onclick="ToggleDrawer" aria-label="Menü">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                    <img src="/izollu-vakfi.png" alt="İzollu" class="mobile-logo" />
-                </div>
-            }
-            <MudContainer MaxWidth="MaxWidth.False" Class="@(_isMobile ? "mt-2" : "mt-4")">
+        </aside>
+
+        <!-- Mobile backdrop (sadece mobilde sidebar açıkken görünür) -->
+        <div class="izollu-backdrop" onclick="window.izolluToggleSidebar()"></div>
+
+        <!-- Ana içerik -->
+        <main class="izollu-main">
+            <MudContainer MaxWidth="MaxWidth.False" Class="izollu-content-container">
                 @Body
             </MudContainer>
-        </MudMainContent>
-    </MudLayout>
+        </main>
+    </div>
 }
 else
 {
@@ -55,42 +49,19 @@ else
 
 @code {
     private bool _sessionChecked = false;
-    private bool _drawerOpen = true;
-    private bool _isMobile = false;
-    private DotNetObjectReference<AuthorizedLayout>? _dotNetRef;
 
     protected override void OnInitialized()
     {
         AuthService.OnAuthStateChanged += OnAuthStateChanged;
 
-        // Eğer kullanıcı zaten authenticated ise (login'den yeni geldi),
-        // session check'i atla → login sonrası beyaz ekran flash'ı önlenir.
         if (AuthService.IsAuthenticated)
             _sessionChecked = true;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            // Mobil ekran tespiti + resize listener kaydı
-            try
-            {
-                _isMobile = await JSRuntime.InvokeAsync<bool>("isMobileScreen");
-                _drawerOpen = !_isMobile;
-                _dotNetRef = DotNetObjectReference.Create(this);
-                await JSRuntime.InvokeVoidAsync("registerResizeCallback", _dotNetRef);
-                await InvokeAsync(StateHasChanged);
-            }
-            catch
-            {
-                // JS yüklenmemişse sessizce geç
-            }
-        }
-
         if (!firstRender || _sessionChecked) return;
 
-        // Reload durumu — localStorage'dan session'ı geri yükle
         if (!AuthService.IsAuthenticated)
         {
             await TryRestoreSessionAsync();
@@ -108,20 +79,6 @@ else
 
         _sessionChecked = true;
         await InvokeAsync(StateHasChanged);
-    }
-
-    [JSInvokable]
-    public void OnScreenResize(bool isMobile)
-    {
-        if (_isMobile == isMobile) return;
-        _isMobile = isMobile;
-        _drawerOpen = !isMobile;
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void ToggleDrawer()
-    {
-        _drawerOpen = !_drawerOpen;
     }
 
     private async Task TryRestoreSessionAsync()
@@ -160,7 +117,6 @@ else
     public void Dispose()
     {
         AuthService.OnAuthStateChanged -= OnAuthStateChanged;
-        _dotNetRef?.Dispose();
     }
 
     private MudTheme _theme = new MudTheme()
