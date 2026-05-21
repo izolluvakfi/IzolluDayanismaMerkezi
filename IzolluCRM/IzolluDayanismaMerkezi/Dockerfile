@@ -9,7 +9,7 @@ WORKDIR /src
 
 # Proje dosyasini kopyala ve bagimlilikları yukle
 COPY ["IzolluVakfi.csproj", "./"]
-RUN dotnet restore "IzolluVakfi.csproj"
+RUN dotnet restore "IzolluVakfi.csproj" -v detailed 2>&1
 
 # Kaynak kodun tamamini kopyala
 COPY . .
@@ -19,7 +19,8 @@ RUN dotnet publish "IzolluVakfi.csproj" \
     -c Release \
     -r linux-x64 \
     --self-contained false \
-    -o /app/publish
+    -o /app/publish \
+    -v detailed 2>&1 || (echo "=== BUILD FAILED ===" && exit 1)
 
 # --- Runtime Stage ---
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
