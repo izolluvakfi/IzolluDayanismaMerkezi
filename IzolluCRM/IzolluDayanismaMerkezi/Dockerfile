@@ -19,7 +19,6 @@ RUN dotnet publish "IzolluVakfi.csproj" \
     -c Release \
     -r linux-x64 \
     --self-contained false \
-    /p:OutputType=Exe \
     -o /app/publish
 
 # --- Runtime Stage ---

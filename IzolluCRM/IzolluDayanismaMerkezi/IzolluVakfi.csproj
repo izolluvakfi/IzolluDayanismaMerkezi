@@ -4,7 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <!-- ApplicationIcon sadece Windows build'de kullanılır -->
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <ApplicationIcon>app-icon.ico</ApplicationIcon>
   </PropertyGroup>
 
