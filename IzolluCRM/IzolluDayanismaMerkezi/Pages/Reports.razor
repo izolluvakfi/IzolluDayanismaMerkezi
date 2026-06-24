@@ -68,17 +68,41 @@
     }
     .stat-content {
         flex: 1;
+        min-width: 0; /* flex item içeriğinden daha dar olabilsin, taşmayı önler */
     }
     .stat-label {
         font-size: 0.8rem;
         color: rgba(255,255,255,0.85);
         margin-bottom: 4px;
         font-weight: 500;
+        overflow-wrap: anywhere;
     }
     .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
         color: white;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.2;
+    }
+    /* Mobil: kartlar dar olduğunda büyük rakamlar yana taşmasın */
+    @@media (max-width: 600px) {
+        .stat-card {
+            padding: 12px;
+            gap: 8px;
+            min-height: 76px;
+        }
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+        .stat-value {
+            font-size: 1.05rem;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+        }
     }
     .period-filter-card {
         background: white;
