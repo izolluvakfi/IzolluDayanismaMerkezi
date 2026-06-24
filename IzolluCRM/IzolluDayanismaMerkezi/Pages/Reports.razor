@@ -703,8 +703,9 @@ else
             // Calculate realized total amount: RealizedCount * GlobalYearlyAmount
             _stats.RealizedTotalAmount = _stats.RealizedCount * globalYearlyAmount;
 
-            // Calculate Total Paid Scholarship: (Count of Paid Months up to current date) * (Global Monthly Amount * 0.8)
-            await CalculateTotalPaidScholarshipAsync();
+            // "Toplam Ödenen Burs" = gerçekleşen (verilen) burs sayısı * burs başına yıllık tutar.
+            // Yanındaki kartlarla tutarlı olması için Gerçekleşen Burs (RealizedCount) baz alınır.
+            _stats.TotalPaidScholarship = _stats.RealizedTotalAmount;
 
             // Members and donors
             _stats.TotalMembers = await MemberService.GetTotalCountAsync();
@@ -733,64 +734,6 @@ else
         finally
         {
             _loading = false;
-        }
-    }
-
-    private async Task CalculateTotalPaidScholarshipAsync()
-    {
-        try
-        {
-            // Step 1: Get Total Active Students (non-graduated students with active scholarship)
-            var allStudents = await StudentService.GetAllAsync();
-            int totalActiveStudents = allStudents.Count(s => !s.MezunMu && s.AktifBursMu);
-            
-            // Step 2: Get Global Monthly Amount from settings
-            var scholarshipAmounts = await SettingsService.GetScholarshipAmountsAsync();
-            decimal globalMonthlyAmount = 3125m; // Default fallback
-            
-            if (!string.IsNullOrWhiteSpace(_selectedReportPeriod) && scholarshipAmounts.Any())
-            {
-                var periodAmount = scholarshipAmounts.FirstOrDefault(s => s.Period == _selectedReportPeriod);
-                if (periodAmount != null)
-                {
-                    globalMonthlyAmount = periodAmount.Amount;
-                }
-            }
-            else if (scholarshipAmounts.Any())
-            {
-                var latestAmount = scholarshipAmounts.OrderByDescending(s => s.Period).FirstOrDefault();
-                if (latestAmount != null)
-                {
-                    globalMonthlyAmount = latestAmount.Amount;
-                }
-            }
-            
-            // Step 3: Calculate Monthly Payment Per Student = Global Monthly Amount * 0.80
-            decimal monthlyPaymentPerStudent = globalMonthlyAmount * 0.8m;
-            
-            // Step 4: Determine Elapsed Months (October to current month)
-            // Academic year starts in October (month 10)
-            var now = DateTime.Now;
-            int elapsedMonths = 0;
-            
-            // Calculate months from October to current month
-            // Oct=1, Nov=2, Dec=3, Jan=4, Feb=5, Mar=6, Apr=7, May=8
-            if (now.Month >= 10) // Oct, Nov, Dec (same year)
-            {
-                elapsedMonths = now.Month - 9; // Oct=1, Nov=2, Dec=3
-            }
-            else if (now.Month >= 1 && now.Month <= 5) // Jan-May (next year)
-            {
-                elapsedMonths = 3 + now.Month; // Jan=4, Feb=5, Mar=6, Apr=7, May=8
-            }
-            
-            // Step 5: Final Formula: Total Paid = TotalStudents * MonthlyPaymentPerStudent * ElapsedMonths
-            _stats.TotalPaidScholarship = totalActiveStudents * monthlyPaymentPerStudent * elapsedMonths;
-        }
-        catch (Exception ex)
-        {
-            _stats.TotalPaidScholarship = 0;
-            Console.WriteLine($"Error calculating total paid scholarship: {ex.Message}");
         }
     }
 
