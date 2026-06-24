@@ -62,7 +62,13 @@ namespace IzolluVakfi.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
@@ -212,6 +218,38 @@ namespace IzolluVakfi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Donors");
+                });
+
+            modelBuilder.Entity("IzolluVakfi.Data.Entities.ErrorLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Detay")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kaynak")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("KullaniciAdi")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Mesaj")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Tarih")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ErrorLogs");
                 });
 
             modelBuilder.Entity("IzolluVakfi.Data.Entities.Meeting", b =>

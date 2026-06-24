@@ -65,6 +65,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Add Application Services
 builder.Services.AddScoped<ActivityLogService>();
+builder.Services.AddScoped<ErrorLogService>();
 builder.Services.AddScoped<StudentScholarshipStatusService>();
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<DonorService>();

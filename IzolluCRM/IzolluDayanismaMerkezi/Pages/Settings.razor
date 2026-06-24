@@ -8,6 +8,8 @@
 @inject MeetingService MeetingService
 @inject ExcelService ExcelService
 @inject MemberScholarshipCommitmentService CommitmentService
+@inject ErrorLogService ErrorLogService
+@inject AuthService AuthService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
@@ -313,6 +315,62 @@
         </MudCard>
     </MudTabPanel>
 
+    @if (AuthService.HasPermission(Permissions.Settings))
+    {
+        <MudTabPanel Text="Hata Logları" Icon="@Icons.Material.Filled.BugReport">
+            <MudCard Class="mt-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Sistem Hata Logları</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="LoadErrorLogs"
+                                   Class="mr-2">
+                            Yenile
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Error"
+                                   StartIcon="@Icons.Material.Filled.DeleteSweep"
+                                   OnClick="ClearErrorLogs">
+                            Logları Temizle
+                        </MudButton>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2" Class="mb-4">
+                        Uygulamada oluşan teknik hataların (örn. Excel içe aktarma, kayıt silme) ayrıntılı kaydı. Bu sekme yalnızca yönetici kullanıcılara görünür.
+                    </MudText>
+                    <MudTable Items="@_errorLogs" Dense="true" Hover="true" Striped="true" Bordered="true">
+                        <HeaderContent>
+                            <MudTh>Tarih</MudTh>
+                            <MudTh>Kullanıcı</MudTh>
+                            <MudTh>Kaynak</MudTh>
+                            <MudTh>Mesaj</MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Tarih">@context.Tarih.ToString("dd.MM.yyyy HH:mm:ss")</MudTd>
+                            <MudTd DataLabel="Kullanıcı">@context.KullaniciAdi</MudTd>
+                            <MudTd DataLabel="Kaynak">@context.Kaynak</MudTd>
+                            <MudTd DataLabel="Mesaj">@context.Mesaj</MudTd>
+                            <MudTd>
+                                <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                               Size="Size.Small"
+                                               OnClick="@(() => ShowErrorDetail(context))" />
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText>Kayıtlı hata bulunmuyor.</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+    }
+
     <MudTabPanel Text="Nasıl Kullanılır?" Icon="@Icons.Material.Filled.Help">
         <MudCard Class="mt-4">
             <MudCardHeader>
@@ -354,11 +412,45 @@
     private List<Student> _meetingCutStudents = new();
     private string _userGuideHtml = string.Empty;
     private string _searchQuery = string.Empty;
+    private List<ErrorLog> _errorLogs = new();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadSettings();
         await LoadUserGuide();
+
+        if (AuthService.HasPermission(Permissions.Settings))
+        {
+            await LoadErrorLogs();
+        }
+    }
+
+    private async Task LoadErrorLogs()
+    {
+        _errorLogs = await ErrorLogService.GetRecentAsync();
+    }
+
+    private async Task ShowErrorDetail(ErrorLog log)
+    {
+        await DialogService.ShowMessageBox(
+            $"{log.Kaynak} - {log.Tarih:dd.MM.yyyy HH:mm:ss}",
+            log.Detay ?? log.Mesaj,
+            yesText: "Kapat");
+    }
+
+    private async Task ClearErrorLogs()
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Onayla",
+            "Tüm hata loglarını silmek istediğinizden emin misiniz?",
+            yesText: "Sil", cancelText: "İptal");
+
+        if (confirm == true)
+        {
+            await ErrorLogService.ClearAsync();
+            await LoadErrorLogs();
+            Snackbar.Add("Hata logları temizlendi.", Severity.Success);
+        }
     }
 
     private async Task LoadUserGuide()
@@ -809,7 +901,8 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Hata: {ErrorMessageHelper.GetFriendlyMessage(ex)}", Severity.Error);
+            await ErrorLogService.LogAsync("AyarlarKontrol", ex);
         }
         finally
         {
@@ -853,7 +946,8 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Hata: {ErrorMessageHelper.GetFriendlyMessage(ex)}", Severity.Error);
+            await ErrorLogService.LogAsync("AyarlarKontrol", ex);
         }
         finally
         {

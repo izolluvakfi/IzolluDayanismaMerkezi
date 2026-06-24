@@ -29,6 +29,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<TermScholarshipConfig> TermScholarshipConfigs { get; set; }
     public DbSet<StudentScholarshipStatus> StudentScholarshipStatuses { get; set; }
     public DbSet<AppUser> AppUsers { get; set; }
+    public DbSet<ErrorLog> ErrorLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

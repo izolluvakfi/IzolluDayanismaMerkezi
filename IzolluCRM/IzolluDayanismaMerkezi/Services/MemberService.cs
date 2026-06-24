@@ -90,7 +90,15 @@ public class MemberService
         }
 
         _context.Members.Add(member);
-        await _context.SaveChangesAsync();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new InvalidOperationException(ErrorMessageHelper.GetFriendlyMessage(ex), ex);
+        }
 
         await _logService.LogAsync("UyeEkle", $"Yeni üye eklendi: {member.AdSoyad}");
 
@@ -125,8 +133,17 @@ public class MemberService
         var member = await _context.Members.FindAsync(id);
         if (member != null)
         {
-            _context.Members.Remove(member);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Members.Remove(member);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex) when (ex is DbUpdateException || ex is InvalidOperationException)
+            {
+                _context.Entry(member).State = EntityState.Unchanged;
+                throw new InvalidOperationException(
+                    $"{member.AdSoyad} silinemedi: {ErrorMessageHelper.GetFriendlyMessage(ex)}", ex);
+            }
 
             await _logService.LogAsync("UyeSil", $"Üye silindi: {member.AdSoyad}");
         }

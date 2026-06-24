@@ -106,7 +106,15 @@ public class StudentService
 
         student.OlusturmaTarihi = DateTime.Now;
         _context.Students.Add(student);
-        await _context.SaveChangesAsync();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new InvalidOperationException(ErrorMessageHelper.GetFriendlyMessage(ex), ex);
+        }
 
         await _meetingService.SeedAttendanceForNewStudentAsync(student.Id);
 
@@ -154,8 +162,17 @@ public class StudentService
         var student = await _context.Students.FindAsync(id);
         if (student != null)
         {
-            _context.Students.Remove(student);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Students.Remove(student);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex) when (ex is DbUpdateException || ex is InvalidOperationException)
+            {
+                _context.Entry(student).State = EntityState.Unchanged;
+                throw new InvalidOperationException(
+                    $"{student.AdSoyad} silinemedi: {ErrorMessageHelper.GetFriendlyMessage(ex)}", ex);
+            }
 
             await _logService.LogAsync("OgrenciSil", $"Öğrenci silindi: {student.AdSoyad}");
         }

@@ -3,6 +3,7 @@
 @inject MemberService MemberService
 @inject ExcelService ExcelService
 @inject SettingsService SettingsService
+@inject ErrorLogService ErrorLogService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
@@ -296,7 +297,8 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Hata: {ErrorMessageHelper.GetFriendlyMessage(ex)}", Severity.Error);
+            await ErrorLogService.LogAsync("MezunSablonIndir", ex);
         }
     }
 
@@ -310,7 +312,8 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Hata: {ErrorMessageHelper.GetFriendlyMessage(ex)}", Severity.Error);
+            await ErrorLogService.LogAsync("MezunDisaAktar", ex);
         }
     }
 
@@ -329,20 +332,48 @@
                 await fileStream.CopyToAsync(memoryStream);
             }
             memoryStream.Position = 0;
-            
+
             var graduatedStudents = ExcelService.ImportGraduatedStudents(memoryStream);
+
+            var succeeded = 0;
+            var failures = new List<(string AdSoyad, string Reason)>();
 
             foreach (var student in graduatedStudents)
             {
-                await StudentService.CreateAsync(student);
+                try
+                {
+                    await StudentService.CreateAsync(student);
+                    succeeded++;
+                }
+                catch (Exception ex)
+                {
+                    failures.Add((student.AdSoyad, ErrorMessageHelper.GetFriendlyMessage(ex)));
+                    await ErrorLogService.LogAsync("MezunOgrenciIceAktar", ex);
+                }
             }
 
             await LoadData();
-            Snackbar.Add($"Başarıyla {graduatedStudents.Count} mezun öğrenci eklendi.", Severity.Success);
+
+            if (failures.Count == 0)
+            {
+                Snackbar.Add($"Başarıyla {succeeded} mezun öğrenci eklendi.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(
+                    $"{succeeded} mezun öğrenci eklendi, {failures.Count} kayıt atlandı.",
+                    succeeded > 0 ? Severity.Warning : Severity.Error);
+
+                await DialogService.ShowMessageBox(
+                    "İçe Aktarma Sonucu",
+                    string.Join("\n", failures.Select(f => $"{f.AdSoyad}: {f.Reason}")),
+                    yesText: "Kapat");
+            }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Hata: {ErrorMessageHelper.GetFriendlyMessage(ex)}", Severity.Error);
+            await ErrorLogService.LogAsync("MezunOgrenciIceAktar", ex);
         }
         finally
         {
@@ -426,7 +457,8 @@
         }
         catch (Exception ex)
         {
-            if (!_disposed) Snackbar?.Add($"Hata: {ex.Message}", Severity.Error);
+            if (!_disposed) Snackbar?.Add($"Hata: {ErrorMessageHelper.GetFriendlyMessage(ex)}", Severity.Error);
+            await ErrorLogService.LogAsync("MezunOgrenciUyeYap", ex);
         }
     }
 
@@ -447,7 +479,8 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Hata: {ErrorMessageHelper.GetFriendlyMessage(ex)}", Severity.Error);
+            await ErrorLogService.LogAsync("MezunOgrenciSil", ex);
         }
     }
 
